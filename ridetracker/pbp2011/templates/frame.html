@@ -1,0 +1,16 @@
+
+<html>
+<h3>Rider {{rider.frame_number}}: {{rider.first_name}} {{rider.last_name}}</h3>
+
+<table>
+<tr>
+  <td>Control</td>
+  <td>Date</td>
+  <td>Elapsed</td>
+</tr>
+{% for ctl, time, elapsed in times %}
+<tr><td>{{ctl}}</td><td>{{time}}</td><td>{{elapsed}}</td></tr>
+{% endfor %}
+</table>
+
+</html>

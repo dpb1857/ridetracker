@@ -1,0 +1,32 @@
+<html>
+<h3>Riders by Country:</h3>
+
+<table>
+<tr>
+  <td><a href="country?sort=country">Country</a></td>
+  <td><a href="country?sort=registered">Registered</a></td>
+  <td>DNS</td>
+  <td>DNF</td>
+  <td><a href="country?sort=rate">Finish Rate</a></td>
+</tr>
+{% for result in results %}
+<tr>
+  <td><a href="country/{{result.cc}}">{{country_names[result.cc]}}</td>
+  <td>{{result.registered}}</td>
+  <td>{{result.dns}}</td>
+  <td>{{result.dnf}}</td>
+  <td>{{result.finish_rate()}}%</td>
+</tr>
+{% endfor %}
+<tr><td>&nbsp;</td></tr>
+<tr>
+  <td>Total:</td>
+  <td>{{registered}}</td>
+  <td>{{total_dns}}</td>
+  <td>{{total_dnf}}</td>
+  <td>{{overall_finish_rate}}%</td>
+</tr>
+</table>
+
+
+</html>

@@ -1,0 +1,22 @@
+<html>
+
+<h3>{{country}} Riders</h3>
+
+<table>
+<tr>
+  <td><a href="?sort=frame">Frame</a></td>
+  <td><a href="?sort=name">First Name</a></td>
+  <td><a href="?sort=name">Last Name</a></td>
+  <td><a href="?sort=time">Time</a></td>
+</tr>
+{% for rider in riders %}
+<tr>
+  <td><a href="../frame/{{rider.frame_number}}">{{rider.frame_number}}</a></td>
+  <td>{{rider.first_name}}</td>
+  <td>{{rider.last_name}}</td>
+  <td>{{status(rider)}}</td>
+</tr>
+{% endfor %}
+</table>
+
+</html>
