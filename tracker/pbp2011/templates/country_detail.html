@@ -11,7 +11,7 @@
 </tr>
 {% for rider in riders %}
 <tr>
-  <td><a href="../frame/{{rider.frame_number}}">{{rider.frame_number}}</a></td>
+  <td><a href="{{ 'pbp2011.views.frame'|url(rider.frame_number) }}">{{rider.frame_number}}</a></td>
   <td>{{rider.first_name}}</td>
   <td>{{rider.last_name}}</td>
   <td>{{status(rider)}}</td>

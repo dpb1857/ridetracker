@@ -9,10 +9,12 @@ from django_countries import countries
 from jinja2 import FileSystemLoader, Environment
 
 import models
+import jinja2filters
 
 template_dirs = getattr(settings, 'TEMPLATE_DIRS')
 default_mimetype = getattr(settings, 'DEFAULT_CONTENT_TYPE')
 env = Environment(loader=FileSystemLoader(template_dirs))
+env.filters['url'] = jinja2filters.url
 
 def format_elapsed(delta):
 
