@@ -127,6 +127,7 @@ TEMPLATE_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     "/home/scratch/pbp_riders/project/pbp2011/templates",
+    os.path.join(ROOT, "tracker", "pbp2011", "templates")
 )
 
 INSTALLED_APPS = (
