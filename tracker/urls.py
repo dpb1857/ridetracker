@@ -11,7 +11,7 @@ urlpatterns = patterns('',
     # url(r'^$', 'project.views.home', name='home'),
 
     url(r'^$', 'django.views.generic.simple.redirect_to', {'url': 'pbp2011/', 'permanent': True}),
-    url(r'^pbp2011/', include('project.pbp2011.urls')),
+    url(r'^pbp2011/', include('tracker.pbp2011.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # uncommented by django_bootstrap.py

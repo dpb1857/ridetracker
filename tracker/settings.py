@@ -1,5 +1,7 @@
 # Django settings for project project.
 
+import os
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -8,6 +10,8 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 DATABASES = {
 #     'default': {
@@ -21,7 +25,7 @@ DATABASES = {
 # Added by django_bootstrap.py
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/home/scratch/pbp_riders/project/project.sqlite',
+        'NAME': os.path.join(ROOT, "data", "ridedata.sqlite"),
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -32,7 +36,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/tmp/pbpcache',
+        'LOCATION': os.path.join(ROOT, "data", "django_cache")
         }
 }
 
@@ -116,7 +120,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'project.urls'
+ROOT_URLCONF = 'tracker.urls'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
@@ -140,7 +144,7 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'django_extensions', # added by django_bootstrap.py
     'south', # added by django_bootstrap.py
-    'project.pbp2011',
+    'tracker.pbp2011',
 )
 
 # A sample logging configuration. The only tangible logging
