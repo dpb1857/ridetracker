@@ -18,11 +18,6 @@ class Rider(models.Model):
     country = CountryField()
     bike_type = models.ForeignKey(BikeType)
 
-    def __unicode__(self):
-        return "%d %s %s" % (self.frame_number, self.first_name, self.last_name)
-
-class Control(models.Model):
-    frame_number = models.IntegerField(primary_key=True)
     dnf = models.BooleanField(default=False) 
     dns = models.BooleanField(default=False) 
     cp1 = models.DateTimeField(null=True) # SQY
@@ -41,7 +36,10 @@ class Control(models.Model):
     cp14 = models.DateTimeField(null=True) # Dreux
     cp15 = models.DateTimeField(null=True) # SQY
 
-for cls in BikeType, Rider, Control:
+    def __unicode__(self):
+        return "%d %s %s" % (self.frame_number, self.first_name, self.last_name)
+
+for cls in BikeType, Rider:
     try:
         admin.site.register(cls)
     except Exception:

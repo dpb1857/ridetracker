@@ -46,12 +46,10 @@ def country(request):
         def add_rider(self, rider):
             self.registered += 1
 
-            control = models.Control.objects.get(frame_number=rider.frame_number)
-
-            if control.dns:
+            if rider.dns:
                 self.dns += 1
 
-            if control.dnf:
+            if rider.dnf:
                 self.dnf += 1
 
         def finish_rate(self):
@@ -98,21 +96,18 @@ def country_detail(request, country_code):
 
     def rider_status(rider):
 
-        if rider.control.dns: 
+        if rider.dns: 
             return "DNS"
-        elif rider.control.dnf:
+        elif rider.dnf:
             return "DNF"
         else:
             try:
-                return format_elapsed(rider.control.cp15-rider.control.cp1)
+                return format_elapsed(rider.cp15-rider.cp1)
             except Exception:
                 return "Unknown"
 
     country_code = country_code.upper()
     riders = list(models.Rider.objects.filter(country=country_code))
-
-    for rider in riders:
-        rider.control = models.Control.objects.get(frame_number=rider.frame_number)
 
     sort = request.GET.get('sort', 'frame')
     
@@ -155,9 +150,7 @@ def frame(request, frame_number):
         ]
 
     rider = models.Rider.objects.get(frame_number=frame_number)
-    control = models.Control.objects.get(frame_number=frame_number)
-
-    times = [getattr(control, "cp%d"%i) for i in range(1, 16)]
+    times = [getattr(rider, "cp%d"%i) for i in range(1, 16)]
     elapsed = [t-times[0] if t else None for t in times]
 
     times = [t.strftime("%m/%d %H:%M") if t else "" for t in times]
