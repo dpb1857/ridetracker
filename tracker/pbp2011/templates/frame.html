@@ -1,5 +1,9 @@
 
-<html>
+{% set title = "Results for rider %s %s" % (rider.first_name, rider.last_name) %}
+
+{% extends "base.html" %}
+
+{% block main %}
 <h3>Rider {{rider.frame_number}}: {{rider.first_name}} {{rider.last_name}}</h3>
 
 <table>
@@ -13,4 +17,4 @@
 {% endfor %}
 </table>
 
-</html>
+{% endblock main %}
