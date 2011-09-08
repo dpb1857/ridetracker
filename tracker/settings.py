@@ -145,6 +145,7 @@ INSTALLED_APPS = (
     'django_extensions', # added by django_bootstrap.py
     'south', # added by django_bootstrap.py
     'tracker.pbp2011',
+    'gunicorn',
 )
 
 # A sample logging configuration. The only tangible logging
