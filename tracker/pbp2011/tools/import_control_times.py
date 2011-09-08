@@ -163,7 +163,7 @@ def process_rider_times(frame_num, dnf, dns, times):
 
         current_control = new_control
         attr = "cp%d" % current_control
-        dt = datetime.datetime.strptime(time, "%d-%m %H:%M")
+        dt = datetime.datetime.strptime("2011-"+time, "%Y-%d-%m %H:%M")
         setattr(control_obj, attr, dt)
 
     control_obj.save()
