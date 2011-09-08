@@ -1,5 +1,10 @@
-<html>
-<h3>Riders by Country:</h3>
+
+{% set title = "PBP 2011 Results by Country" %}
+
+{% extends "base.html" %}
+
+{% block main %}
+<h3>Country Totals:</h3>
 
 <table>
 <tr>
@@ -28,5 +33,4 @@
 </tr>
 </table>
 
-
-</html>
+{% endblock main %}

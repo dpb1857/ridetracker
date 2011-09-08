@@ -1,0 +1,103 @@
+
+#header_label {
+    height: 50px;
+    background: url(/static/pbp2011/images/header-background.jpg) no-repeat;
+    padding-top: 20px;
+    padding-left: 20px;
+}
+
+#top-menu ul, #top-menu li {
+    display: inline;
+    list-style-type: none;
+    margin: 0;
+    padding-right: 20px;
+    font-size: 18px;
+}
+
+#top-menu span.active {
+    background: #dddddd;
+}
+
+.top-menu-hr {
+    margin:0;
+    padding-top: 0px;
+}
+
+#status form {
+  padding-top: 3px;
+  padding-bottom: 5px;
+  font-size:16px;
+}
+
+#select-crawler hr{
+    margin:0;
+}
+
+#select-crawler {
+    font-size:16px;
+}
+
+#menu-crawler ul, #menu-crawler li {
+    display: inline;
+    list-style-type: none;
+    margin: 0;
+    padding-right: 20px;
+    font-size: 16px;
+}
+
+#menu-crawler span.active {
+    background: #dddddd;
+}
+
+.top-hr {
+    margin:0;
+}
+
+#crumbs ul, #crumbs li {
+    display: inline;
+    list-style-type: none;
+    margin: 0;
+    font-size: 18px;
+}
+
+body {
+  font-size:14px;
+  padding-left: 10px;
+}
+
+ul.plain {
+    list-style-type: none;
+}
+
+
+.centered {
+    text-align: center;
+}
+
+.errorlist {
+    color: red;
+}
+
+
+/* Crawler roots input form */
+
+#crawler_roots input {
+    margin: 0.1em;
+    background-color: #eeeeff;
+    width: 300px;
+}
+
+#crawler_filters input {
+    background-color: #eeeeff;
+    width: 300px;
+}
+
+#crawler_filters .operator {
+    width:25px;
+    margin: 0.1em;
+}
+
+#crawler_filters select {
+    margin: 0.1em; 
+    border:1px solid #bbb;
+}

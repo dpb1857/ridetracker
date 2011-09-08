@@ -1,6 +1,9 @@
-<html>
 
-<h3>{{country}} Riders</h3>
+{% extends "base.html" %}
+
+{% block main %}
+
+<h3>{{country}}</h3>
 
 <table>
 <tr>
@@ -19,4 +22,4 @@
 {% endfor %}
 </table>
 
-</html>
+{% endblock main %}
