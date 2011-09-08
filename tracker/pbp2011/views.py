@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.views.decorators.cache import cache_page
 
 from django_countries import countries
+
 from jinja2 import FileSystemLoader, Environment
 
 import models
@@ -15,6 +16,8 @@ template_dirs = getattr(settings, 'TEMPLATE_DIRS')
 default_mimetype = getattr(settings, 'DEFAULT_CONTENT_TYPE')
 env = Environment(loader=FileSystemLoader(template_dirs))
 env.filters['url'] = jinja2filters.url
+
+tw = countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',')[0]
 
 def format_elapsed(delta):
 
@@ -29,7 +32,7 @@ def format_elapsed(delta):
 
 # Create your views here.
 
-@cache_page(60 * 15)
+@cache_page(86400 * 7)
 def country(request):
 
     class Results(object):
@@ -91,7 +94,6 @@ def country(request):
     
 # return HttpResponse("list of countries:<br>" + '<br> '.join(countries))
 
-@cache_page(60 * 15)
 def country_detail(request, country_code):
 
     def rider_status(rider):
@@ -132,7 +134,6 @@ def country_detail(request, country_code):
 
     return HttpResponse(rendered)
 
-@cache_page(60 * 2)
 def frame(request, frame_number):
 
     CONTROL_NAMES = [
