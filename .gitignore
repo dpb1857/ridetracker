@@ -1,6 +1,7 @@
 data
 download
 python
+root
 src
 *~
 *.pyc
