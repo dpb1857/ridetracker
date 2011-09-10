@@ -21,15 +21,17 @@
 #}
       <h1 id="header_label">PBP 2011 Results Viewer (Unofficial)</h1>
 
-{# 
 {% block primary_nav %}
     <div id="primary" class="nav">
       <ul>
-	<li {{country_class|safe}}> <a href="/pbp2011/country">Countries</a>
+	<li {{rider_class|safe}}> <a href="{{ 'pbp2011.views.country'|url }}">Country</a>
+{#
+	<li {{rider_class|safe}}> <a href="{{ 'pbp2011.views.help'|url }}">Help</a>
+	<li id="right_button" {{rider_class|safe}}> <a href="{{ 'pbp2011.views.admin'|url }}">Admin</a>
+#}
       </ul>
     </div>
 {% endblock primary_nav %}
-#}
     </div> {# end of div masthead #}
 
     <div id="main">

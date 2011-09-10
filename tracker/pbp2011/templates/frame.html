@@ -4,6 +4,19 @@
 {% extends "base.html" %}
 
 {% block main %}
+
+<hr class="top-hr" />
+<div id="crumbs">
+  <ul>
+    <li><a href="{{'pbp2011.views.country'|url}}">Country</a>
+    <li>&gt;
+    <li><a href="{{'pbp2011.views.country_detail'|url(rider.country)}}">{{rider.country.name}}</a>
+    <li>&gt;
+    <li>{{rider.frame_number}}
+  <ul>
+  <hr class="top-hr" />
+</div>
+
 <h3>Rider {{rider.frame_number}}: {{rider.first_name}} {{rider.last_name}}</h3>
 
 <table>

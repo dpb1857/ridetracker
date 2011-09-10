@@ -1,103 +1,40 @@
 
 #header_label {
     height: 50px;
-    background: url(/static/pbp2011/images/header-background.jpg) no-repeat;
+    /* background: url(/static/pbp2011/images/header-background.jpg) no-repeat; */
+     background: url(../images/header-background.jpg) no-repeat;
     padding-top: 20px;
     padding-left: 20px;
+    margin-bottom: 10px;
 }
 
-#top-menu ul, #top-menu li {
-    display: inline;
-    list-style-type: none;
-    margin: 0;
-    padding-right: 20px;
-    font-size: 18px;
+.nav { border-bottom: 1px solid #888; clear: both; /* ?? */}
+.nav { float: left; position: relative; width: 100%;}
+.nav { background: #fff url(../images/whtgrad.png) repeat-x; }
+.nav ul { magin: 0 auto; margin:0 0 0 0; padding: 0; list-style: none; }
+.nav li { float: left; margin: 0; padding:0; }  /* line them up side by side; */
+.nav a { border-bottom: none; border-right: 1px solid #ddd; color: #555;
+  float: left; letter-spacing: 0px; margin: 0;
+  padding: 4px 15px; text-decoration: none;
 }
+/* .nav li.active a { background: #888 url(../images/blkgrad.png) repeat-x; color: #eee; } */
+.nav li.active a { background: #888; color: #eee; }
 
-#top-menu span.active {
-    background: #dddddd;
-}
+#primary.nav { padding-top: 0px;}
+#primary.nav { font: normal 14px Verdana,Arial,Helvetica,sans-serif;}
+#primary.nav { border-bottom: 1px solid #555; }	       
+#primary.nav a { font-size: 14px;}
 
-.top-menu-hr {
-    margin:0;
-    padding-top: 0px;
-}
+#secondary.nav { font: normal 12px Verdana,Arial,Helvetica,sans-serif;}
+#secondary.nav a { font-size: 12px;}
 
-#status form {
-  padding-top: 3px;
-  padding-bottom: 5px;
-  font-size:16px;
-}
-
-#select-crawler hr{
-    margin:0;
-}
-
-#select-crawler {
-    font-size:16px;
-}
-
-#menu-crawler ul, #menu-crawler li {
-    display: inline;
-    list-style-type: none;
-    margin: 0;
-    padding-right: 20px;
-    font-size: 16px;
-}
-
-#menu-crawler span.active {
-    background: #dddddd;
-}
-
-.top-hr {
-    margin:0;
-}
+#right_button { float: right; }
 
 #crumbs ul, #crumbs li {
     display: inline;
     list-style-type: none;
     margin: 0;
-    font-size: 18px;
+    font-size: 12px;
 }
 
-body {
-  font-size:14px;
-  padding-left: 10px;
-}
-
-ul.plain {
-    list-style-type: none;
-}
-
-
-.centered {
-    text-align: center;
-}
-
-.errorlist {
-    color: red;
-}
-
-
-/* Crawler roots input form */
-
-#crawler_roots input {
-    margin: 0.1em;
-    background-color: #eeeeff;
-    width: 300px;
-}
-
-#crawler_filters input {
-    background-color: #eeeeff;
-    width: 300px;
-}
-
-#crawler_filters .operator {
-    width:25px;
-    margin: 0.1em;
-}
-
-#crawler_filters select {
-    margin: 0.1em; 
-    border:1px solid #bbb;
-}
+div#main { padding-top: 20px; }
