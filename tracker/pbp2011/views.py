@@ -129,12 +129,19 @@ def frame(request, frame_number):
         "SQY"
         ]
 
+    # XXX can we merge this back with the function models?
+    def format_elapsed(delta, format):
+
+        hours = delta.days*24 + delta.seconds/3600
+        mins = (delta.seconds % 3600)/60
+        return format % (hours, mins)
+
     rider = models.Rider.objects.get(frame_number=frame_number)
     times = [getattr(rider, "cp%d"%i) for i in range(1, 16)]
     elapsed = [t-times[0] if t else None for t in times]
 
     times = [t.strftime("%m/%d %H:%M") if t else "" for t in times]
-    elapsed = [models.format_elapsed(e) for e in elapsed]
+    elapsed = [format_elapsed(e, "%d:%02d") for e in elapsed]
 
     time_tuples = zip(CONTROL_NAMES, times, elapsed)
 
