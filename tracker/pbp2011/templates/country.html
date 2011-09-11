@@ -1,5 +1,6 @@
 
 {% set title = "PBP 2011 Results by Country" %}
+{% set by_country_class = 'class="active"' %}
 
 {% extends "base.html" %}
 
@@ -16,7 +17,7 @@
 </tr>
 {% for result in results %}
 <tr>
-  <td><a href="{{ 'pbp2011.views.country_detail'|url(result.cc) }}">{{country_names[result.cc]}}</td>
+  <td><a href="{{ 'pbp2011.views.riders'|url(result.cc) }}">{{country_names[result.cc]}}</td>
   <td>{{result.registered}}</td>
   <td>{{result.dns}}</td>
   <td>{{result.dnf}}</td>

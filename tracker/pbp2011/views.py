@@ -19,17 +19,6 @@ env.filters['url'] = jinja2filters.url
 
 tw = countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',')[0]
 
-def format_elapsed(delta):
-
-    if not delta:
-        return ""
-
-    hours = delta.days*24 + delta.seconds/3600
-    mins = (delta.seconds % 3600)/60
-    return "%02d:%02d" % (hours, mins)
-
-
-
 # Create your views here.
 
 @cache_page(86400 * 7)
@@ -90,25 +79,19 @@ def country(request):
 
     return HttpResponse(rendered)
     
-# return HttpResponse("list of countries:<br>" + '<br> '.join(countries))
+@cache_page(86400 * 7)
+def riders(request, country_code=None, template_name=None):
 
-def country_detail(request, country_code):
+    # XXX Raise some sort of error if template_name is None;
 
-    def rider_status(rider):
+    country_name = countries.OFFICIAL_COUNTRIES[country_code] if country_code else ""
+    show_country = True if country_code is None else False
 
-        if rider.dns: 
-            return "DNS"
-        elif rider.dnf:
-            return "DNF"
-        else:
-            try:
-                return format_elapsed(rider.cp15-rider.cp1)
-            except Exception:
-                return "Unknown"
+    riders = models.Rider.objects.all()
+    if country_code:
+        riders = riders.filter(country=country_code)
 
-    country_code = country_code.upper()
-    riders = list(models.Rider.objects.filter(country=country_code))
-
+    riders = list(riders)
     sort = request.GET.get('sort', 'frame')
     
     if sort == "frame":
@@ -119,13 +102,10 @@ def country_detail(request, country_code):
     elif sort == "time":
         riders.sort(key=lambda x: x.first_name)
         riders.sort(key=lambda x: x.last_name)
-        riders.sort(key=lambda x: rider_status(x))
+        riders.sort(key=lambda x: x.elapsed.sort_key)
 
-    template = env.get_template("country_detail.html")
-    rendered = template.render(dict(riders=riders,
-                                    country=countries.OFFICIAL_COUNTRIES[country_code],
-                                    status=rider_status
-                                    ))
+    template = env.get_template(template_name)
+    rendered = template.render(dict(riders=riders, country=country_name, show_country=show_country))
 
     return HttpResponse(rendered)
 
@@ -154,7 +134,7 @@ def frame(request, frame_number):
     elapsed = [t-times[0] if t else None for t in times]
 
     times = [t.strftime("%m/%d %H:%M") if t else "" for t in times]
-    elapsed = [format_elapsed(e) for e in elapsed]
+    elapsed = [models.format_elapsed(e) for e in elapsed]
 
     time_tuples = zip(CONTROL_NAMES, times, elapsed)
 

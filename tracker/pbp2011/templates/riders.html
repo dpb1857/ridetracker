@@ -1,0 +1,33 @@
+
+{% extends "base.html" %}
+
+{% block main %}
+
+{% block breadcrumbs %} 
+{% endblock breadcrumbs %}
+
+<br>
+<table>
+<tr>
+  <td><a href="?sort=frame">Frame</a></td>
+  <td><a href="?sort=name">First Name</a></td>
+  <td><a href="?sort=name">Last Name</a></td>
+{% if show_country %}
+  <td>Country</td>
+{% endif %}
+  <td><a href="?sort=time">Time</a></td>
+</tr>
+{% for rider in riders %}
+<tr>
+  <td><a href="{{ 'pbp2011.views.frame'|url(rider.frame_number) }}">{{rider.frame_number}}</a></td>
+  <td>{{rider.first_name}}</td>
+  <td>{{rider.last_name}}</td>
+{% if show_country %}
+  <td>{{rider.country.name}}</td>
+{% endif %}
+  <td>{{rider.elapsed}}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock main %}

@@ -1,0 +1,17 @@
+
+{% set title = "PBP 2011 Results for " + country %}
+{% set by_country_class = 'class="active"' %}
+{% extends "riders.html" %}
+
+{% block breadcrumbs %}
+  <hr class="top-hr" />
+  <div id="crumbs">
+    <ul>
+      <li><a href="{{'pbp2011.views.country'|url}}">Country</a>
+      <li>&gt;
+      <li>{{country}}
+    <ul>
+    <hr class="top-hr" />
+  </div>
+{% endblock breadcrumbs %}
+

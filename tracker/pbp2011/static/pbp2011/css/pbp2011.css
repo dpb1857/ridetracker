@@ -18,7 +18,7 @@
   padding: 4px 15px; text-decoration: none;
 }
 /* .nav li.active a { background: #888 url(../images/blkgrad.png) repeat-x; color: #eee; } */
-.nav li.active a { background: #888; color: #eee; }
+.nav li.active a { background: #999; color: #fff; }
 
 #primary.nav { padding-top: 0px;}
 #primary.nav { font: normal 14px Verdana,Arial,Helvetica,sans-serif;}

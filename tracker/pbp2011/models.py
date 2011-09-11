@@ -39,6 +39,41 @@ class Rider(models.Model):
     def __unicode__(self):
         return "%d %s %s" % (self.frame_number, self.first_name, self.last_name)
 
+    @property
+    def elapsed(self):
+        
+        class Elapsed(object):
+            
+            def __init__(self, dns, dnf, start, end):
+                self.dns = dns
+                self.dnf = dnf
+                self.start = start
+                self.end = end
+
+            def __unicode__(self):
+                return self.format_elapsed("%d:%02d")
+
+            def format_elapsed(self, format):
+
+                if self.dns: 
+                    return "DNS"
+                if self.dnf:
+                    return "DNF"
+                if self.end is None or self.start is None:
+                    return "Unknown"
+
+                delta = self.end - self.start
+                hours = delta.days*24 + delta.seconds/3600
+                mins = (delta.seconds % 3600)/60
+                return format % (hours, mins)
+
+            @property
+            def sort_key(self):
+                return self.format_elapsed("%03d:%02d")
+
+        return Elapsed(self.dns, self.dnf, self.cp1, self.cp15)
+
+
 for cls in BikeType, Rider:
     try:
         admin.site.register(cls)
