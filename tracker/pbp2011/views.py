@@ -138,11 +138,8 @@ def frame(request, frame_number):
 
     rider = models.Rider.objects.get(frame_number=frame_number)
     times = [getattr(rider, "cp%d"%i) for i in range(1, 16)]
-    elapsed = [t-times[0] if t else None for t in times]
-
+    elapsed = [str(models.RiderTimeDelta(times[0], t)) for t in times]
     times = [t.strftime("%m/%d %H:%M") if t else "" for t in times]
-    elapsed = [format_elapsed(e, "%d:%02d") for e in elapsed]
-
     time_tuples = zip(CONTROL_NAMES, times, elapsed)
 
     template = env.get_template("frame.html")

@@ -5,6 +5,63 @@ from django_countries import CountryField
 
 # Create your models here.
 
+class RiderTimeDelta(object):
+    
+    def  __init__(self, start, end):
+
+        try:
+            self.delta = end - start
+        except Exception:
+            self.delta = None
+    
+    def __str__(self):
+        
+        return self.__unicode__()
+
+    def __unicode__(self, fmt="%d:%02d"):
+
+        if self.delta is None:
+            return ""
+        hours = self.delta.days*24 + self.delta.seconds/3600
+        mins = (self.delta.seconds % 3600)/60
+        return fmt % (hours, mins)
+
+
+class RiderTotalTime(object):
+
+    def __init__(self, start, end, dns=False, dnf=False):
+        self.dns = dns
+        self.dnf = dnf
+        self.delta = RiderTimeDelta(start, end) if start and end else None
+
+        if self.dns:
+            self.print_value = u'DNS'
+            self._sort_key = u'DNS'
+        elif self.dnf:
+            self.print_value = u'DNF'
+            self._sort_key =  u'DNF'
+        elif self.delta is None:
+            self.print_value = u'Unknown'
+            self._sort_key = u'Unknown'
+        else:
+            self.print_value = unicode(self.delta)
+            self._sort_key = self.delta.__unicode__(fmt="%03d:%02d")
+            
+    def __str__(self):
+
+        return self.print_value
+
+
+    def __unicode__(self):
+        
+        return self.print_value
+
+    @property
+    def sort_key(self):
+        
+        return self._sort_key
+
+
 class BikeType(models.Model):
     bike_type = models.CharField(max_length=16, unique=True)
 
@@ -41,37 +98,7 @@ class Rider(models.Model):
 
     @property
     def elapsed(self):
-        
-        class Elapsed(object):
-            
-            def __init__(self, dns, dnf, start, end):
-                self.dns = dns
-                self.dnf = dnf
-                self.start = start
-                self.end = end
-
-            def __unicode__(self):
-                return self.format_elapsed("%d:%02d")
-
-            def format_elapsed(self, format):
-
-                if self.dns: 
-                    return "DNS"
-                if self.dnf:
-                    return "DNF"
-                if self.end is None or self.start is None:
-                    return "Unknown"
-
-                delta = self.end - self.start
-                hours = delta.days*24 + delta.seconds/3600
-                mins = (delta.seconds % 3600)/60
-                return format % (hours, mins)
-
-            @property
-            def sort_key(self):
-                return self.format_elapsed("%03d:%02d")
-
-        return Elapsed(self.dns, self.dnf, self.cp1, self.cp15)
+        return RiderTotalTime(self.cp1, self.cp15, dns=self.dns, dnf=self.dnf)
 
 
 for cls in BikeType, Rider:
