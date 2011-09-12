@@ -1,9 +1,9 @@
 
 #header_label {
-    height: 50px;
+    height: 80px;
     /* background: url(/static/pbp2011/images/header-background.jpg) no-repeat; */
      background: url(../images/header-background.jpg) no-repeat;
-    padding-top: 20px;
+    padding-top: 30px;
     padding-left: 20px;
     margin-bottom: 10px;
 }
