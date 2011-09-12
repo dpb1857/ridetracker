@@ -22,6 +22,11 @@ tw = countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].spl
 
 # Create your views here.
 
+def raise_exception(request):
+    
+    raise Exception("Let's test error handling")
+
+
 @cache_page(86400 * 7)
 def country(request):
 

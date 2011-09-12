@@ -8,5 +8,7 @@ urlpatterns = patterns('',
     (r'^country/(\w{2})$', 'pbp2011.views.riders', {'template_name': 'riders_country.html'}),
     (r'^frame/(\d+)$', 'pbp2011.views.frame'),
 
+    (r'^raise_exception$', 'pbp2011.views.raise_exception'),
 #   (r'^admin/import_data$', 'pbp2011.views.import_data'),
+                       
 )

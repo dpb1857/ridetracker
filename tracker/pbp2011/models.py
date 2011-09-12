@@ -47,69 +47,12 @@ class RiderTimeDelta(object):
         return self.timedelta.seconds
 
 
-
-# class RiderTimeDelta(object):
-#     
-#     def  __init__(self, start, end):
-# 
-#         try:
-#             self.delta = end - start
-#         except Exception:
-#             self.delta = None
-#     
-#     def __str__(self):
-#         
-#         return self.__unicode__()
-# 
-#     def __unicode__(self, fmt="%d:%02d"):
-# 
-#         if self.delta is None:
-#             return ""
-#         hours = self.delta.days*24 + self.delta.seconds/3600
-#         mins = (self.delta.seconds % 3600)/60
-#         return fmt % (hours, mins)
-# 
-# 
-# class RiderTotalTime(object):
-# 
-#     def __init__(self, start, end, dns=False, dnf=False):
-#         self.dns = dns
-#         self.dnf = dnf
-#         self.delta = RiderTimeDelta(start, end) if start and end else None
-# 
-#         if self.dns:
-#             self.print_value = u'DNS'
-#             self._sort_key = u'DNS'
-#         elif self.dnf:
-#             self.print_value = u'DNF'
-#             self._sort_key =  u'DNF'
-#         elif self.delta is None:
-#             self.print_value = u'Unknown'
-#             self._sort_key = u'Unknown'
-#         else:
-#             self.print_value = unicode(self.delta)
-#             self._sort_key = self.delta.__unicode__(fmt="%03d:%02d")
-#             
-#     def __str__(self):
-# 
-#         return self.print_value
-# 
-# 
-#     def __unicode__(self):
-#         
-#         return self.print_value
-# 
-#     @property
-#     def sort_key(self):
-#         
-#         return self._sort_key
-
-
 class BikeType(models.Model):
     bike_type = models.CharField(max_length=16, unique=True)
 
     def __unicode__(self):
         return self.bike_type
+
 
 class Rider(models.Model):
     frame_number = models.IntegerField(primary_key=True)

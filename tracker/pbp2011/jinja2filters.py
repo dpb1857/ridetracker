@@ -60,7 +60,7 @@ def truncate(text,arg):
 
 # Added by dpb
 
-def check_sentinel(delta):
+def _check_sentinel(delta):
         
     if delta.days == 100:
         return "DNF"
@@ -73,7 +73,7 @@ def check_sentinel(delta):
 
 def format_ride_time(delta, show_special=True):
 
-    special = check_sentinel(delta)
+    special = _check_sentinel(delta)
     if special:
         if show_special:
             return special
