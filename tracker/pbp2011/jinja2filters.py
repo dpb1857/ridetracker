@@ -57,3 +57,30 @@ def truncate(text,arg):
             return ' '.join(arr)
         else:
             return ' '.join(arr[:count]) + '&hellip;'
+
+# Added by dpb
+
+def check_sentinel(delta):
+        
+    if delta.days == 100:
+        return "DNF"
+    if delta.days == 101:
+        return "DNS"
+    if delta.days == 102:
+        return "Unknown"
+
+    return None
+
+def format_ride_time(delta, show_special=True):
+
+    special = check_sentinel(delta)
+    if special:
+        if show_special:
+            return special
+        else:
+            return ""
+
+    hours = delta.days*24 + delta.seconds/3600
+    mins = (delta.seconds % 3600)/60
+    return "%d:%02d" % (hours, mins)
+

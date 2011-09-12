@@ -1,3 +1,6 @@
+
+from datetime import timedelta
+
 from django.db import models
 from django.contrib import admin
 
@@ -7,59 +10,99 @@ from django_countries import CountryField
 
 class RiderTimeDelta(object):
     
-    def  __init__(self, start, end):
+    def __init__(self, start, end, dnf=False, dns=False):
+        if dnf:
+            days, seconds = (100, 0) # Marker for DNF;
+        elif dns:
+            days, seconds = (101, 0) # Marker for DNS;
+        else:
+            try:
+                delta = end - start
+                days, seconds = delta.days, delta.seconds
+            except Exception:
+                days, seconds = (102, 0) # Marker for Unknown;
 
-        try:
-            self.delta = end - start
-        except Exception:
-            self.delta = None
-    
+        self.timedelta = timedelta(days=days, seconds=seconds)
+
     def __str__(self):
         
-        return self.__unicode__()
-
-    def __unicode__(self, fmt="%d:%02d"):
-
-        if self.delta is None:
-            return ""
-        hours = self.delta.days*24 + self.delta.seconds/3600
-        mins = (self.delta.seconds % 3600)/60
-        return fmt % (hours, mins)
-
-
-class RiderTotalTime(object):
-
-    def __init__(self, start, end, dns=False, dnf=False):
-        self.dns = dns
-        self.dnf = dnf
-        self.delta = RiderTimeDelta(start, end) if start and end else None
-
-        if self.dns:
-            self.print_value = u'DNS'
-            self._sort_key = u'DNS'
-        elif self.dnf:
-            self.print_value = u'DNF'
-            self._sort_key =  u'DNF'
-        elif self.delta is None:
-            self.print_value = u'Unknown'
-            self._sort_key = u'Unknown'
-        else:
-            self.print_value = unicode(self.delta)
-            self._sort_key = self.delta.__unicode__(fmt="%03d:%02d")
-            
-    def __str__(self):
-
-        return self.print_value
-
+        return str(self.timedelta)
 
     def __unicode__(self):
         
-        return self.print_value
+        return str(self.timedelta)
+
+    def __lt__(self, y):
+        
+        return self.timedelta.__lt__(y.timedelta)
 
     @property
-    def sort_key(self):
+    def days(self):
         
-        return self._sort_key
+        return self.timedelta.days
+
+    @property
+    def seconds(self):
+
+        return self.timedelta.seconds
+
+
+
+# class RiderTimeDelta(object):
+#     
+#     def  __init__(self, start, end):
+# 
+#         try:
+#             self.delta = end - start
+#         except Exception:
+#             self.delta = None
+#     
+#     def __str__(self):
+#         
+#         return self.__unicode__()
+# 
+#     def __unicode__(self, fmt="%d:%02d"):
+# 
+#         if self.delta is None:
+#             return ""
+#         hours = self.delta.days*24 + self.delta.seconds/3600
+#         mins = (self.delta.seconds % 3600)/60
+#         return fmt % (hours, mins)
+# 
+# 
+# class RiderTotalTime(object):
+# 
+#     def __init__(self, start, end, dns=False, dnf=False):
+#         self.dns = dns
+#         self.dnf = dnf
+#         self.delta = RiderTimeDelta(start, end) if start and end else None
+# 
+#         if self.dns:
+#             self.print_value = u'DNS'
+#             self._sort_key = u'DNS'
+#         elif self.dnf:
+#             self.print_value = u'DNF'
+#             self._sort_key =  u'DNF'
+#         elif self.delta is None:
+#             self.print_value = u'Unknown'
+#             self._sort_key = u'Unknown'
+#         else:
+#             self.print_value = unicode(self.delta)
+#             self._sort_key = self.delta.__unicode__(fmt="%03d:%02d")
+#             
+#     def __str__(self):
+# 
+#         return self.print_value
+# 
+# 
+#     def __unicode__(self):
+#         
+#         return self.print_value
+# 
+#     @property
+#     def sort_key(self):
+#         
+#         return self._sort_key
 
 
 class BikeType(models.Model):
@@ -98,7 +141,7 @@ class Rider(models.Model):
 
     @property
     def elapsed(self):
-        return RiderTotalTime(self.cp1, self.cp15, dns=self.dns, dnf=self.dnf)
+        return RiderTimeDelta(self.cp1, self.cp15, dns=self.dns, dnf=self.dnf)
 
 
 for cls in BikeType, Rider:

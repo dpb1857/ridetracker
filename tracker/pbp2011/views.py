@@ -16,6 +16,7 @@ template_dirs = getattr(settings, 'TEMPLATE_DIRS')
 default_mimetype = getattr(settings, 'DEFAULT_CONTENT_TYPE')
 env = Environment(loader=FileSystemLoader(template_dirs))
 env.filters['url'] = jinja2filters.url
+env.filters['format_ride_time'] = jinja2filters.format_ride_time
 
 tw = countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',')[0]
 
@@ -102,7 +103,7 @@ def riders(request, country_code=None, template_name=None):
     elif sort == "time":
         riders.sort(key=lambda x: x.first_name)
         riders.sort(key=lambda x: x.last_name)
-        riders.sort(key=lambda x: x.elapsed.sort_key)
+        riders.sort(key=lambda x: x.elapsed)
 
     template = env.get_template(template_name)
     rendered = template.render(dict(riders=riders, country=country_name, show_country=show_country))
@@ -129,17 +130,9 @@ def frame(request, frame_number):
         "SQY"
         ]
 
-    # XXX can we merge this back with the function models?
-    def format_elapsed(delta, format):
-
-        hours = delta.days*24 + delta.seconds/3600
-        mins = (delta.seconds % 3600)/60
-        return format % (hours, mins)
-
     rider = models.Rider.objects.get(frame_number=frame_number)
     times = [getattr(rider, "cp%d"%i) for i in range(1, 16)]
-    elapsed = [str(models.RiderTimeDelta(times[0], t)) for t in times]
-    times = [t.strftime("%m/%d %H:%M") if t else "" for t in times]
+    elapsed = [models.RiderTimeDelta(times[0], t) for t in times]
     time_tuples = zip(CONTROL_NAMES, times, elapsed)
 
     template = env.get_template("frame.html")
