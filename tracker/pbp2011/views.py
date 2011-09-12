@@ -148,3 +148,8 @@ def frame(request, frame_number):
     return HttpResponse(rendered)
 
     
+def render(request, template_name=None):
+    
+    template = env.get_template(template_name)
+    rendered = template.render()
+    return HttpResponse(rendered)

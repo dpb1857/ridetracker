@@ -11,4 +11,6 @@ urlpatterns = patterns('',
     (r'^raise_exception$', 'pbp2011.views.raise_exception'),
 #   (r'^admin/import_data$', 'pbp2011.views.import_data'),
                        
+    (r'^help/?$', 'django.views.generic.simple.redirect_to', {'url': 'help/about', 'permanent': True}, "pbp2011-help"),
+    (r'^help/about$', 'pbp2011.views.render', {'template_name': 'help-about.html'}, "pbp2011-help-about"),
 )
