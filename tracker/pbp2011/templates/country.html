@@ -7,13 +7,13 @@
 {% block main %}
 <h3>Country Totals:</h3>
 
-<table>
+<table class="ridedata" style="width: 600px;">
 <tr>
-  <td><a href="{{ 'pbp2011.views.country'|url }}">Country</a></td>
-  <td><a href="{{ 'pbp2011.views.country'|url }}?sort=registered">Registered</a></td>
-  <td>DNS</td>
-  <td>DNF</td>
-  <td><a href="{{ 'pbp2011.views.country'|url }}?sort=rate">Finish Rate</a></td>
+  <th><a href="{{ 'pbp2011.views.country'|url }}">Country</a></th>
+  <th><a href="{{ 'pbp2011.views.country'|url }}?sort=registered">Registered</a></th>
+  <th>DNS</th>
+  <th>DNF</th>
+  <th><a href="{{ 'pbp2011.views.country'|url }}?sort=rate">Finish Rate</a></th>
 </tr>
 {% for result in results %}
 <tr>

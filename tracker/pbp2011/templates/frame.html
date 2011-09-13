@@ -19,11 +19,11 @@
 
 <h3>Rider {{rider.frame_number}}: {{rider.first_name}} {{rider.last_name}}</h3>
 
-<table>
+<table class="ridedata" style="width: 400px;">
 <tr>
-  <td>Control</td>
-  <td>Date</td>
-  <td>Elapsed</td>
+  <th>Control</th>
+  <th>Date</th>
+  <th>Elapsed</th>
 </tr>
 {% for ctl, time, elapsed in times %}
 <tr><td>{{ctl}}</td><td>{% if time %}{{time.strftime("%m/%d %H:%M")}}{% endif %}</td><td>{{elapsed|format_ride_time(show_special=False)}}</td></tr>

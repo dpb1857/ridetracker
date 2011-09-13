@@ -38,3 +38,12 @@
 }
 
 div#main { padding-top: 20px; }
+
+table.ridedata {
+    background-color: #f8f8f8;
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+table.ridedata th, table.ridedata td { border: 1px solid black; }
+

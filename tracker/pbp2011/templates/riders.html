@@ -6,16 +6,17 @@
 {% block breadcrumbs %} 
 {% endblock breadcrumbs %}
 
+{% set width = 800 if show_country else 600 %}
 <br>
-<table>
+<table class="ridedata" style="width: {{width}}px;">
 <tr>
-  <td><a href="?sort=frame">Frame</a></td>
-  <td><a href="?sort=name">First Name</a></td>
-  <td><a href="?sort=name">Last Name</a></td>
+  <th><a href="?sort=frame">Frame</a></th>
+  <th><a href="?sort=name">First Name</a></th>
+  <th><a href="?sort=name">Last Name</a></th>
 {% if show_country %}
-  <td>Country</td>
+  <th>Country</th>
 {% endif %}
-  <td><a href="?sort=time">Time</a></td>
+  <th><a href="?sort=time">Time</a></th>
 </tr>
 {% for rider in riders %}
 <tr>
