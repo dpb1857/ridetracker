@@ -14,7 +14,7 @@ prod_update:
 	git pull
 	(cd tracker && ../python/bin/python manage.py collectstatic)
 	supervisorctl -c ../supervisor/etc/supervisord.conf restart pbpresults
-	rm -rf data/django_cache
+	sudo rm -rf data/django_cache
 
 help:
 	@echo
