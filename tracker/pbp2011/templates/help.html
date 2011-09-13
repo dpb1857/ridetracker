@@ -4,7 +4,8 @@
 {% block secondary_nav %}
 <div id="secondary" class="nav">
   <ul>
-    <li {{help_about_class}}> <a href="">About</a>
+    <li {{help_about_class}}> <a href="{{ 'pbp2011-help-about'|url }}">About</a>
+    <li {{help_related_class}}> <a href="{{ 'pbp2011-help-related'|url }}">Related Projects</a>
   </ul>
 </div>
 {% endblock secondary_nav %}

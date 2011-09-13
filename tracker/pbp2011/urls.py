@@ -13,4 +13,5 @@ urlpatterns = patterns('',
                        
     (r'^help/?$', 'django.views.generic.simple.redirect_to', {'url': 'help/about', 'permanent': True}, "pbp2011-help"),
     (r'^help/about$', 'pbp2011.views.render', {'template_name': 'help-about.html'}, "pbp2011-help-about"),
+    (r'^help/related$', 'pbp2011.views.render', {'template_name': 'help-related.html'}, "pbp2011-help-related"),
 )
