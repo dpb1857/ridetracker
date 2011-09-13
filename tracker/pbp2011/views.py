@@ -2,8 +2,10 @@
 import datetime
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.core.urlresolvers import reverse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.views.decorators.cache import cache_page
+from django.views.generic.simple import redirect_to
 
 from django_countries import countries
 
@@ -18,7 +20,7 @@ env = Environment(loader=FileSystemLoader(template_dirs))
 env.filters['url'] = jinja2filters.url
 env.filters['format_ride_time'] = jinja2filters.format_ride_time
 
-tw = countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',')[0]
+countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',')[0]
 
 # Create your views here.
 
@@ -88,9 +90,16 @@ def country(request):
 @cache_page(86400 * 7)
 def riders(request, country_code=None, template_name=None):
 
-    # XXX Raise some sort of error if template_name is None;
+    country_name = ""
+    if country_code:
+        country_code = country_code.upper()
+        if country_code == "UK":
+            return redirect_to(request, reverse('pbp2011.views.riders', args=("GB",)), query_string=True)
 
-    country_name = countries.OFFICIAL_COUNTRIES[country_code] if country_code else ""
+        country_name = countries.OFFICIAL_COUNTRIES.get(country_code, None)
+        if not country_name:
+            return respond(request, template_name="error-message.html", message="Unrecognized country code: %s" % country_code, response=HttpResponseNotFound)
+
     show_country = True if country_code is None else False
 
     riders = models.Rider.objects.all()
@@ -147,9 +156,8 @@ def frame(request, frame_number):
 
     return HttpResponse(rendered)
 
-    
-def render(request, template_name=None):
+def respond(request, template_name=None, response=HttpResponse, **kwargs):
     
     template = env.get_template(template_name)
-    rendered = template.render()
-    return HttpResponse(rendered)
+    rendered = template.render(**kwargs)
+    return response(rendered)
