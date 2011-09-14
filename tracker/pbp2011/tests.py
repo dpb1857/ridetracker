@@ -4,10 +4,10 @@ PBP2011 tests.
 
 import unittest
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.test import Client, TestCase
 
-from models import RiderTimeDelta
+from models import Rider, RiderTimeDelta
 from jinja2filters import format_ride_time
 
 class RiderTimeDeltaTest(TestCase):
@@ -44,6 +44,14 @@ class RiderTimeDeltaTest(TestCase):
         """
         x, y, z = self.setup_ordering()
         self.assertLess(y,  z)
+
+    def test_equal(self):
+        """
+        Tests if two RiderTimeDeltas will compare equal.
+        """
+        x1, y1, z1 = self.setup_ordering()
+        x2, y2, z2 = self.setup_ordering()
+        self.assertEqual(x1, x2)
 
     def test_properties1(self):
         """
@@ -117,10 +125,26 @@ class RiderTimeDeltaTest(TestCase):
         x = RiderTimeDelta(start, None)
         self.assertEqual(format_ride_time(x, show_special=False), "")
 
+class RiderModelTest(TestCase):
+    
+    fixtures = ["fixtures/pbp2011_us_data.json.gz", "fixtures/control_data.json.gz"]
+    
+    def test_checkpoints_property(self):
+        
+        rider = Rider.objects.get(frame_number=4484)
+        self.assertEqual(len(rider.checkpoint_times), 15)
+
+    def test_elapsed_property(self):
+
+        rider = Rider.objects.get(frame_number=4484)
+        start = datetime.now()
+        end = start + timedelta(hours=89,minutes=27)
+        self.assertEqual(rider.elapsed, RiderTimeDelta(start, end))
+
 
 class ViewTest(TestCase):
 
-    fixtures = ["fixtures/pbp2011_us_data.json.gz"]
+    fixtures = ["fixtures/pbp2011_us_data.json.gz", "fixtures/control_data.json.gz"]
 
     def test_exception_test(self):
         """
@@ -174,3 +198,11 @@ class ViewTest(TestCase):
         c = Client()
         resp = c.get('/pbp2011/country/uk')
         self.assertEqual(resp.status_code, 301)
+
+    def test_frame(self):
+        """
+        Test that display of data for a single rider is ok.
+        """
+        c = Client()
+        resp = c.get('/pbp2011/frame/4484')
+        self.assertEqual(resp.status_code, 200)

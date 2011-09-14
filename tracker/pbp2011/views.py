@@ -24,8 +24,19 @@ countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',
 
 # Create your views here.
 
+DISABLE_CACHE = False
+
+if DISABLE_CACHE:
+    def cache_page(*args, **kwargs):
+        def noop_decorator(func):
+            return func
+        return noop_decorator
+
 def raise_exception(request):
-    
+    """
+    Verify that your installed configuration handles system exceptions the way you want it to -
+    check that email gets sent, proper exception page show to user, etc.
+    """
     raise Exception("Let's test error handling")
 
 
@@ -126,32 +137,15 @@ def riders(request, country_code=None, template_name=None):
 
 def frame(request, frame_number):
 
-    CONTROL_NAMES = [
-        "SQY",
-        "Villaines",
-        "Fougeres",
-        "Tinteniac",
-        "Loudeac",
-        "Carhaix",
-        "Brest",
-        "Carhaix",
-        "Loudeac",
-        "Tinteniac",
-        "Fougeres",
-        "Villaines",
-        "Mortagne",
-        "Dreux",
-        "SQY"
-        ]
-
     rider = models.Rider.objects.get(frame_number=frame_number)
-    times = [getattr(rider, "cp%d"%i) for i in range(1, 16)]
-    elapsed = [models.RiderTimeDelta(times[0], t) for t in times]
-    time_tuples = zip(CONTROL_NAMES, times, elapsed)
+    times = rider.checkpoint_times
+    elapsed_times = [models.RiderTimeDelta(times[0], t) for t in times]
 
     template = env.get_template("frame.html")
     rendered = template.render(dict(rider=rider,
-                                    times=time_tuples,
+                                    control_names=models.Control.get_names(),
+                                    times=times,
+                                    elapsed_times=elapsed_times
                                     ))
 
     return HttpResponse(rendered)

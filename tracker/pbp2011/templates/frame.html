@@ -25,8 +25,13 @@
   <th>Date</th>
   <th>Elapsed</th>
 </tr>
-{% for ctl, time, elapsed in times %}
-<tr><td>{{ctl}}</td><td>{% if time %}{{time.strftime("%m/%d %H:%M")}}{% endif %}</td><td>{{elapsed|format_ride_time(show_special=False)}}</td></tr>
+{% for control_name in control_names %}
+<tr>
+  {% set time,elapsed = times[loop.index0],elapsed_times[loop.index0] %}
+  <td>{{control_name}}</td>
+  <td>{% if time %}{{time.strftime("%m/%d %H:%M")}}{% endif %}</td>
+  <td>{{elapsed|format_ride_time(show_special=False)}}</td>
+</tr>
 {% endfor %}
 </table>
 

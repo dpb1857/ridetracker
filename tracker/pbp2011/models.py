@@ -36,6 +36,10 @@ class RiderTimeDelta(object):
         
         return self.timedelta.__lt__(y.timedelta)
 
+    def __eq__(self, y):
+        
+        return self.timedelta.__eq__(y.timedelta)
+
     @property
     def days(self):
         
@@ -54,6 +58,37 @@ class BikeType(models.Model):
         return self.bike_type
 
 
+class Control(models.Model):
+    
+    number = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=32)
+    distance = models.FloatField()
+
+    def __unicode__(self):
+        return "%d %s %05.1f" % (self.number, self.name, self.distance)
+
+    @staticmethod
+    def get_names():
+
+        return [control.name for control in Control.objects.order_by('number')]
+
+    @staticmethod
+    def get_controls():
+
+        return list(Control.objects.order_by('number'))
+
+    @staticmethod
+    def get_num_controls():
+
+        return len(Control.get_names())
+
+
+class Checkpoint(models.Model):
+    
+    checkpoint_number = models.IntegerField()
+    frame_number = models.IntegerField(db_index=True)
+    time = models.DateTimeField(db_index=True)
+
 class Rider(models.Model):
     frame_number = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=32)
@@ -63,32 +98,20 @@ class Rider(models.Model):
 
     dnf = models.BooleanField(default=False) 
     dns = models.BooleanField(default=False) 
-    cp1 = models.DateTimeField(null=True) # SQY
-    cp2 = models.DateTimeField(null=True) # Villaines
-    cp3 = models.DateTimeField(null=True) # Fougeres
-    cp4 = models.DateTimeField(null=True) # Tinteniac
-    cp5 = models.DateTimeField(null=True) # Loudeac
-    cp6 = models.DateTimeField(null=True) # Carhaix
-    cp7 = models.DateTimeField(null=True) # Brest
-    cp8 = models.DateTimeField(null=True) # Carhaix
-    cp9 = models.DateTimeField(null=True) # Loudeac
-    cp10 = models.DateTimeField(null=True) # Tinteniac
-    cp11 = models.DateTimeField(null=True) # Fougeres
-    cp12 = models.DateTimeField(null=True) # Villaines
-    cp13 = models.DateTimeField(null=True) # Mortagne
-    cp14 = models.DateTimeField(null=True) # Dreux
-    cp15 = models.DateTimeField(null=True) # SQY
 
     def __unicode__(self):
         return "%d %s %s" % (self.frame_number, self.first_name, self.last_name)
 
     @property
+    def checkpoint_times(self):
+        checkpoints = Checkpoint.objects.filter(frame_number=self.frame_number)
+        values = Control.get_num_controls() * [None]
+        for cp in checkpoints:
+            values[cp.checkpoint_number-1] = cp.time
+        return values
+
+    @property
     def elapsed(self):
-        return RiderTimeDelta(self.cp1, self.cp15, dns=self.dns, dnf=self.dnf)
+        times = self.checkpoint_times
+        return RiderTimeDelta(times[0], times[14], dns=self.dns, dnf=self.dnf)
 
-
-for cls in BikeType, Rider:
-    try:
-        admin.site.register(cls)
-    except Exception:
-        pass

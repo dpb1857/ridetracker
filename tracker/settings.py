@@ -127,7 +127,8 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(ROOT, "tracker", "pbp2011", "templates")
+    os.path.join(ROOT, "tracker", "pbp2011", "templates"),
+    os.path.join(ROOT, "tracker", "templates"),
 )
 
 INSTALLED_APPS = (
@@ -145,8 +146,9 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'django_extensions', # added by django_bootstrap.py
     'south', # added by django_bootstrap.py
-    'tracker.pbp2011',
     'gunicorn',
+    'tracker.pbp2011',
+    'tracker.histogram',
 )
 
 # A sample logging configuration. The only tangible logging
