@@ -13,8 +13,16 @@ prod_fixperms:
 prod_update:
 	git pull
 	(cd tracker && ../python/bin/python manage.py collectstatic)
-	supervisorctl -c ../supervisor/etc/supervisord.conf restart pbpresults
+	(cd tracker && find . -name \*.pyc -print|xargs rm -f)
+	supervisorctl -c ../supervisor/etc/supervisord.conf stop pbpresults
 	sudo rm -rf data/django_cache
+	$(MAKE) prod_fixperms
+	supervisorctl -c ../supervisor/etc/supervisord.conf start pbpresults
+
+prod_restart:
+	supervisorctl -c ../supervisor/etc/supervisord.conf stop pbpresults
+	sudo rm -rf data/django_cache
+	supervisorctl -c ../supervisor/etc/supervisord.conf start pbpresults
 
 help:
 	@echo
