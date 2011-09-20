@@ -27,10 +27,9 @@
       <ul>
 	<li {{all_riders_class}}> <a href="{{ 'pbp2011.views.riders'|url }}">All Riders</a>
 	<li {{by_country_class}}> <a href="{{ 'pbp2011.views.country'|url }}">By Country</a>
+	<li {{tracking_class}}> <a href="{{ 'pbp2011.views.histogram'|url }}">Histogram</a> {# <~-- XXX Future 'Tracking' --> #}
 	<li id="right_button" {{help_class|safe}}> <a href="{{ 'pbp2011-help'|url }}">Help</a>
-{#
-	<li id="right_button" {{rider_class|safe}}> <a href="{{ 'pbp2011.views.admin'|url }}">Admin</a>
-#}
+{#	<li id="right_button" {{rider_class|safe}}> <a href="{{ 'pbp2011.views.admin'|url }}">Admin</a> #}
       </ul>
     </div>
 {% endblock primary_nav %}

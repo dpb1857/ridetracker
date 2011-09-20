@@ -155,3 +155,9 @@ def respond(request, template_name=None, response=HttpResponse, **kwargs):
     template = env.get_template(template_name)
     rendered = template.render(**kwargs)
     return response(rendered)
+
+def histogram(request):
+
+    template = env.get_template("histogram.html")
+    rendered = template.render()
+    return HttpResponse(rendered)

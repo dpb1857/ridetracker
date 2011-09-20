@@ -152,7 +152,7 @@ class ViewTest(TestCase):
         """
         c = Client()
         with self.assertRaises(Exception):
-            c.get("/raise_exception")
+            c.get("/pbp2011/raise_exception")
 
     def test_country_view(self):
         """

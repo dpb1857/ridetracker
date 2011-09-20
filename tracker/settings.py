@@ -149,6 +149,7 @@ INSTALLED_APPS = (
     'gunicorn',
     'tracker.pbp2011',
     'tracker.histogram',
+    'tracker.flot',
 )
 
 # A sample logging configuration. The only tangible logging

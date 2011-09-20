@@ -13,6 +13,8 @@ urlpatterns = patterns('',
     url(r'^$', 'django.views.generic.simple.redirect_to', {'url': 'pbp2011/', 'permanent': True}),
     url(r'^pbp2011/', include('tracker.pbp2011.urls')),
 
+    url(r'^histogram/', include('tracker.histogram.urls')),
+
     # Uncomment the admin/doc line below to enable admin documentation:
     # uncommented by django_bootstrap.py
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
