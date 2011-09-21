@@ -10,6 +10,9 @@ python:
 prod_fixperms:
 	sudo chown -R www-data:www-data data
 
+prod_clearcache:
+	sudo rm -rf data/django_cache
+
 prod_update:
 	git pull
 	(cd tracker && ../python/bin/python manage.py collectstatic)
