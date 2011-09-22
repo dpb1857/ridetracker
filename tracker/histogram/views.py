@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils import simplejson
+from django.views.decorators.cache import cache_page
 
 import models
 
@@ -14,6 +15,7 @@ def compute_histogram(request):
     models.compute_pbp2011_histogram()
     return HttpResponse("Done.")
 
+@cache_page(60*60)
 def hist_data(request, datespec):
 
     try:
