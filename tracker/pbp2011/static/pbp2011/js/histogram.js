@@ -266,7 +266,7 @@ function main() {
     $("input#fold").attr("checked", false)
 
     $("input#track").click(function() {
-	framenum = parseInt($("input#framenum").val());
+	var framenum = parseInt($("input#framenum").val());
 	$("input#framenum").val("");
 	if (!isNaN(framenum)) {
 	    AddTrackedFrame(framenum);
@@ -311,8 +311,8 @@ function main() {
 
 	if (fold) {
 	    /* Fold the plot data */
-	    start = 0;
-	    end = ride_data.length - 1;
+	    var start = 0;
+	    var end = ride_data.length - 1;
 	    while (end > start) {
 		ride_data[start++][1] += ride_data[end--][1];
 	    }
