@@ -9,7 +9,9 @@ from datetime import timedelta
 
 import models
 
-from django.test import TestCase
+import pbp2011.models as ridemodels
+
+from django.test import TestCase, Client
 
 
 class HistogramTest(TestCase):
@@ -23,11 +25,24 @@ class HistogramTest(TestCase):
     def test_histogram(self):
 
         data = models.Location.aggregate_rider_data()
-        locations = models.Location.compute_histogram(data, models.PBP2011_START_TIME + timedelta(hours=5))
+        locations = models.Location.compute_histogram(data, ridemodels.RIDE_START_TIME + timedelta(hours=5))
 
     def test_series(self):
 
-        start = models.PBP2011_START_TIME
+        start = ridemodels.RIDE_START_TIME
         end = start + timedelta(hours=2)
         models.Location.compute_series(start, end)
 
+class ViewTest(TestCase):
+
+    fixtures = ["fixtures/pbp2011_us_data.json.gz", "fixtures/control_data.json.gz"]
+
+    def test_hist_data(self):
+
+        c = Client()
+        c.get("/histogram/histdata/2011-08-22 06:00")
+    
+    def test_frame_data(self):
+
+        c = Client()
+        c.get("/histogram/framedata/4484")

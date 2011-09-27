@@ -150,6 +150,7 @@ INSTALLED_APPS = (
     'tracker.pbp2011',
     'tracker.histogram',
     'tracker.flot',
+    'tracker.misc',
 )
 
 # A sample logging configuration. The only tangible logging

@@ -60,6 +60,8 @@ def truncate(text,arg):
 
 # Added by dpb
 
+# XXX don't hardcode these checks, check for properties on this class;
+
 def _check_sentinel(delta):
         
     if delta.days == 100:

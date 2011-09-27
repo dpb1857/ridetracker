@@ -4,8 +4,10 @@
 
 {% block head_extra %}
     <script language="javascript" type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="/static/misc/js/jquery.cookie.js"></script>
     <script language="javascript" type="text/javascript" src="/static/flot/js/jquery.flot.min.js"></script>
     <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="/static/flot/js/excanvas.compiled.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="/static/pbp2011/js/histogram.js"></script>
 {% endblock head_extra %}
 
 {% set tracking_class = 'class="active"' %}
@@ -17,147 +19,39 @@
 <br>
 <h3>Rider Distribution Along the Route</h3>
 
-<div id="graph" style="width: 1250px;">
-  <div id="placeholder" style="width:1000px;height:400px; float:left"></div>
-  <div id="labels" style="width:250px; float: right;">
+<div id="graph" style="width: 100%;;">
+  <div id="placeholder" style="width:800px; height:400px; float:left"></div>
+  <div id="labels" style="width:250px; float: left; padding-left: 10px;">
     <div id="date"></div>
-<!--    <div id="bucket"></div> -->
-    <div id="riders"></div>
     <div>
-      <input id="pause" type="button" value="Pause">
-      <input id="resume" type="button" value="Resume" style="display:none;">
+      <input id="stop" type="button" value="Stop" style="display:none;">
+      <input id="start" type="button" value="Start">
       <input id="reset" type="button" value="Reset">
+    </div>
+    <div style="padding-top:20px">
+      <div id="riders"></div>
+      <span id="bucket"></span>
+      <input id="bucket_plus" type="image" src="/static/misc/images/plus.png" width="20px">
+      <input id="bucket_minus" type="image" src="/static/misc/images/minus.png" width="20px">
+    </div>
+    <div style="padding-top:20px;">
+      <span style="font-weight:bold">Fold Display:</span>
+      <input id="fold" type="checkbox">
+    </div>
+    <div style="padding-top:20px;">
+      <span style="font-weight: bold">Track Frame:</span>
+      <br>
+      <input id="framenum" type="text" size="10">
+      <input id="track" type="button" value="track">
+      
+      <div id="tracklist" style="padding-top: 10px;font-size:small;">
+      </div>
+    </div>
   </div>
 </div>
 
 <script type="text/javascript">
-
-function histdata_format_date(date) {
-    year = date.getFullYear();
-    month = date.getMonth();
-    day = date.getDate();
-    hour = date.getHours();
-    min = date.getMinutes();
-    if (min < 10) min = '0'+min;
-
-    return ''+year+'-'+month+'-'+day+' '+hour+':'+min;
-}
-
-function getBackgroundColor(date) {
-    hour = date.getHours();
-    min = date.getMinutes();
-
-    var colors_quarter = ["#a0a0a0", "#c0c0c0", "#e0e0e0", "#ffffff"];
-
-
-    if (hour > 7 && hour < 21)
-        return "#ffffff";
-    else if (hour > 21 || hour < 7)
-        return "#808080";
-    else {
-        var q = min/15;
-        if (hour == 21)
-            q = 3 - q;
-        return colors_quarter[q];
-
-        return "#c0c0c0";
-    }
-}
-
-$(function () {
-
-    var start_date = new Date(2011, 8, 21, 16, 0);
-    var end_date =  new Date(2011, 8, 25, 18, 0);
-
-    var paused = false;
-    var date = start_date;
-
-    var controls = [[0, 0], [221, 0], [310, 0], [364, 0], [449, 0], [525, 0], [618, 0], [703, 0], [782, 0], [867, 0], [921, 0], [1009, 0], [1090, 0], [1165, 0], [1230, 0]
-                    ];
-				 
-    $("input#pause").click(function() {
-        paused = true;
-        $("input#pause").hide();
-        $("input#resume").show();
-    })
-
-    $("input#resume").click(function() {
-        paused = false;
-        $("input#pause").show();
-        $("input#resume").hide();
-        loadDataViaTimer();
-    })
-
-    $("input#reset").click(function() {
-        paused = false;
-        date = start_date;
-        $("input#pause").show();
-        $("input#resume").hide();
-        loadDataViaTimer();
-    })
-
-    function onDataReceived(series) {
-        var ride_data = [];
-        var step=5;
-        var total_riders = 0;
-	for (var i=1; i<(1231-step); i+=step) {
-            var sum = 0;
-            for (var j=0; j<step; j++) {
-                sum += series.data[i+j];
-            }				     
-            total_riders += sum;
-            ride_data.push([i, sum]);
-        }
-
-        var plot_data = [
-            {data: ride_data,
-             lines: { show: true}
-             },
-            {data: controls,
-             points: {show: true}
-             }
-            ];
-
-        var plot_options = {
-            yaxis: {min: 0, max: 300 },
-				  // grid: {backgroundColor: getBackgroundColor(date)},
-	    grid: {backgroundColor: getBackgroundColor(date)}
-        };
-
-        $.plot($("#placeholder"), plot_data, plot_options);
-	$('#date').empty();
-	$('#date').append(histdata_format_date(date));
-	$('#bucket').empty();
-	$('#bucket').append("Bucket width is "+step+"km");
-	$('#riders').empty();
-	$('#riders').append("Riders:"+total_riders);
-    }		
-
-    function loadData() {
-        var datestr = histdata_format_date(date);
-	$.ajax({
-	    url: "/histogram/histdata/"+datestr,
-	    method: 'GET',
-	    dataType: 'json',
-	    success: onDataReceived
-	});
-    };
-
-    function loadDataViaTimer() {
-        if (paused)
-            return;
-
-        loadData();
-        next_date = new Date(date.getTime() + 15*60*1000); // Increment date by 15min
-        if (next_date < end_date) {
-            date = next_date;
-            setTimeout(loadDataViaTimer, 200);
-        }
-    }
-
-    setTimeout(loadDataViaTimer, 0);
-});
+$(main);
 </script>
-
 {% endblock main %}
 

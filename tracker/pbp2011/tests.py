@@ -7,7 +7,7 @@ import unittest
 from datetime import datetime, timedelta
 from django.test import Client, TestCase
 
-from models import Rider, RiderTimeDelta
+from models import Control, Rider, RiderTimeDelta, RIDE_START_TIME
 from jinja2filters import format_ride_time
 
 class RiderTimeDeltaTest(TestCase):
@@ -141,6 +141,18 @@ class RiderModelTest(TestCase):
         end = start + timedelta(hours=89,minutes=27)
         self.assertEqual(rider.elapsed, RiderTimeDelta(start, end))
 
+    def test_get_location(self):
+
+        timestamp = RIDE_START_TIME + timedelta(days=1)
+        controls = Control.objects.all()
+        rider = Rider.objects.get(frame_number=4484)
+        location = rider.get_location(timestamp, controls, rider.checkpoint_times)
+        self.assertEqual(int(location), 379)
+
+    def test_get_locations(self):
+
+        locations = Rider.get_locations(4484)
+        self.assertEqual(locations[100], 393)
 
 class ViewTest(TestCase):
 
