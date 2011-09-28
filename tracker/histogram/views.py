@@ -44,7 +44,10 @@ def hist_data(request, datespec):
 @cache_page(60*60)
 def frame_data(request, frame_num):
 
-    rider = ridemodels.Rider.objects.get(frame_number=frame_num)
+    try:
+        rider = ridemodels.Rider.objects.get(frame_number=frame_num)
+    except:
+        return HttpResponseNotFound("404 Not Found: Could not find frame number %s" % frame_num)
 
     result_dict = {
         'framenum': frame_num,

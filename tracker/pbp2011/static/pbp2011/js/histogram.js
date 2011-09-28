@@ -109,6 +109,13 @@ function RemoveTrackedFrame(frame_num) {
     }
 }
 
+function IsFrameTracked(frame_num) {
+    for (var i=0; i<TrackFrames.length; i++) {
+	if (TrackFrames[i] == frame_num)
+	    return true;
+    }
+    return false;
+}
 
 function LoadTrackedFrames() {
     var cookie = $.cookie(TrackFrames_cookie);
@@ -123,6 +130,7 @@ function LoadTrackedFrames() {
 function onFrameDataReceived(result) {
     // The result data is an array of the rider location at each time index for the period of the ride.
     FrameData[FrameData.length] = result;
+    AddTrackedFrame(result.framenum);
     BuildTrackList();
 }
 
@@ -268,8 +276,7 @@ function main() {
     $("input#track").click(function() {
 	var framenum = parseInt($("input#framenum").val());
 	$("input#framenum").val("");
-	if (!isNaN(framenum)) {
-	    AddTrackedFrame(framenum);
+	if (!isNaN(framenum) && !IsFrameTracked(framenum)) {
 	    loadFrameData(framenum);
 	}
     })
