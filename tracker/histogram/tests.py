@@ -18,14 +18,18 @@ class HistogramTest(TestCase):
     
     fixtures = ["fixtures/pbp2011_us_data.json.gz", "fixtures/control_data.json.gz"]
 
-    def test_aggregation(self):
-
-        models.Location.aggregate_rider_data()
-
     def test_histogram(self):
 
-        data = models.Location.aggregate_rider_data()
-        locations = models.Location.compute_histogram(data, ridemodels.RIDE_START_TIME + timedelta(hours=5))
+        riders = ridemodels.Rider.objects.all()
+        locations = models.Location.compute_histogram(riders, ridemodels.RIDE_START_TIME + timedelta(hours=5))
+
+    def test_histogram2(self):
+
+        riders = ridemodels.Rider.objects.all()
+        locations = models.Location.compute_histogram(riders, ridemodels.RIDE_START_TIME + timedelta(hours=80))
+
+        # We get 4 here if DNFs aren't shipped to the finish;
+        self.assertEqual(locations[221], 4) 
 
     def test_series(self):
 
@@ -46,3 +50,8 @@ class ViewTest(TestCase):
 
         c = Client()
         c.get("/histogram/framedata/4484")
+
+    def test_frame_data_bad_framenum(self):
+
+        c = Client()
+        c.get("/histogram/framedata/12345");

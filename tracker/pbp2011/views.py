@@ -24,7 +24,7 @@ countries.OFFICIAL_COUNTRIES['TW'] = countries.OFFICIAL_COUNTRIES['TW'].split(',
 
 # Create your views here.
 
-DISABLE_CACHE = False
+DISABLE_CACHE = getattr(settings, 'DISABLE_CACHE', False)
 
 if DISABLE_CACHE:
     def cache_page(*args, **kwargs):
@@ -42,7 +42,9 @@ def raise_exception(request):
 
 @cache_page(86400 * 7)
 def country(request):
-
+    """
+    Display statistics for a country.
+    """
     class Results(object):
 
         def __init__(self, cc):
@@ -100,6 +102,9 @@ def country(request):
     
 @cache_page(86400 * 7)
 def riders(request, country_code=None, template_name=None):
+    """
+    Display the times for a group of riders.
+    """
 
     country_name = ""
     if country_code:
@@ -136,16 +141,21 @@ def riders(request, country_code=None, template_name=None):
     return HttpResponse(rendered)
 
 def frame(request, frame_number):
-
+    """
+    Display checkpoint times for a single rider.
+    """
     rider = models.Rider.objects.get(frame_number=frame_number)
-    times = rider.checkpoint_times
-    elapsed_times = [models.RiderTimeDelta(times[0], t) for t in times]
+    waypoints = rider.waypoints
+    elapsed_times = [models.RiderTimeDelta(waypoints[0].timestamp, w.timestamp) for w in waypoints if w.transition==models.Waypoint.TRANSITION_ARRIVAL]
+
+    for w in waypoints:
+        if w.transition == models.Waypoint.TRANSITION_ARRIVAL:
+            w.elapsed = models.RiderTimeDelta(waypoints[0].timestamp, w.timestamp)
+            w.name = models.Control.control_at(w.kilometers).name
 
     template = env.get_template("frame.html")
     rendered = template.render(dict(rider=rider,
-                                    control_names=models.Control.get_names(),
-                                    times=times,
-                                    elapsed_times=elapsed_times
+                                    waypoints=[w for w in waypoints if w.transition == models.Waypoint.TRANSITION_ARRIVAL]
                                     ))
 
     return HttpResponse(rendered)

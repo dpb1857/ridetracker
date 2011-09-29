@@ -3,6 +3,7 @@
 import os
 
 DEBUG = False
+DISABLE_CACHE = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (

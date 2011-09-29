@@ -19,18 +19,19 @@
 
 <h3>Rider {{rider.frame_number}}: {{rider.first_name}} {{rider.last_name}}</h3>
 
-<table class="ridedata" style="width: 400px;">
+<table class="ridedata" style="width: 500px;">
 <tr>
-  <th>Control</th>
+  <th>Location</th>
+  <th>Distance</th>
   <th>Date</th>
   <th>Elapsed</th>
 </tr>
-{% for control_name in control_names %}
+{% for waypoint in waypoints %}
 <tr>
-  {% set time,elapsed = times[loop.index0],elapsed_times[loop.index0] %}
-  <td>{{control_name}}</td>
-  <td>{% if time %}{{time.strftime("%m/%d %H:%M")}}{% endif %}</td>
-  <td>{{elapsed|format_ride_time(show_special=False)}}</td>
+  <td>{{waypoint.name}}</td>
+  <td>{{waypoint.kilometers}}</td>
+  <td>{% if waypoint.timestamp %}{{waypoint.timestamp.strftime("%m/%d %H:%M")}}{% endif %}</td>
+  <td>{{waypoint.elapsed|format_ride_time(show_special=False)}}</td>
 </tr>
 {% endfor %}
 </table>

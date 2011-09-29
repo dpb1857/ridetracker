@@ -7,7 +7,8 @@ import unittest
 from datetime import datetime, timedelta
 from django.test import Client, TestCase
 
-from models import Control, Rider, RiderTimeDelta, RIDE_START_TIME
+from models import Control, Rider, RIDE_START_TIME
+from tracker.util import RiderTimeDelta
 from jinja2filters import format_ride_time
 
 class RiderTimeDeltaTest(TestCase):
@@ -127,12 +128,13 @@ class RiderTimeDeltaTest(TestCase):
 
 class RiderModelTest(TestCase):
     
-    fixtures = ["fixtures/pbp2011_us_data.json.gz", "fixtures/control_data.json.gz"]
+    fixtures = ["fixtures/pbp2011_us_data.json.gz"]
     
-    def test_checkpoints_property(self):
+    def test_waypoints_property(self):
         
         rider = Rider.objects.get(frame_number=4484)
-        self.assertEqual(len(rider.checkpoint_times), 15)
+        waypoints = rider.waypoints
+        self.assertEqual(len(rider.waypoints), 15)
 
     def test_elapsed_property(self):
 
@@ -144,19 +146,30 @@ class RiderModelTest(TestCase):
     def test_get_location(self):
 
         timestamp = RIDE_START_TIME + timedelta(days=1)
-        controls = Control.objects.all()
         rider = Rider.objects.get(frame_number=4484)
-        location = rider.get_location(timestamp, controls, rider.checkpoint_times)
+        location = rider.get_location(timestamp)
         self.assertEqual(int(location), 379)
 
     def test_get_locations(self):
 
-        locations = Rider.get_locations(4484)
+        locations = Rider.objects.get(frame_number=4484).get_locations()
         self.assertEqual(locations[100], 393)
+
+class RiderModelTest2(TestCase):
+
+    fixtures = ["fixtures/pbp2011_data.json.gz"]
+
+    def test_elapsed_property(self):
+
+        # The curious case of a rider who DNFed before ever crossing the starting line...
+        rider = Rider.objects.get(frame_number=5433)
+        elapsed = rider.elapsed
+        self.assertEqual(rider.elapsed, RiderTimeDelta(None, None, dnf=True))
+
 
 class ViewTest(TestCase):
 
-    fixtures = ["fixtures/pbp2011_us_data.json.gz", "fixtures/control_data.json.gz"]
+    fixtures = ["fixtures/pbp2011_us_data.json.gz"]
 
     def test_exception_test(self):
         """

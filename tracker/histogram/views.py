@@ -2,6 +2,7 @@
 import pickle
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.utils import simplejson
 from django.views.decorators.cache import cache_page
@@ -9,7 +10,17 @@ from django.views.decorators.cache import cache_page
 import models
 import pbp2011.models as ridemodels
 
+from tracker import util
+
 # Create your views here.
+
+DISABLE_CACHE = getattr(settings, 'DISABLE_CACHE', False)
+
+if DISABLE_CACHE:
+    def cache_page(*args, **kwargs):
+        def noop_decorator(func):
+            return func
+        return noop_decorator
 
 def compute_histogram(request):
 
@@ -18,13 +29,14 @@ def compute_histogram(request):
 
 @cache_page(60*60)
 def hist_data(request, datespec):
-
+    """
+    """
     try:
         time = datetime.strptime(datespec, "%Y-%m-%d %H:%M")
     except:
         return HttpResponseBadRequest("400 Bad Request: Could not parse datespec.")
 
-    time = ridemodels.constrain_ride_time(time)
+    time = util.constrain_ride_time(time)
 
     try:
         location = models.Location.objects.get(time=time)
@@ -51,7 +63,7 @@ def frame_data(request, frame_num):
 
     result_dict = {
         'framenum': frame_num,
-        'data': ridemodels.Rider.get_locations(frame_num),
+        'data': rider.get_locations(),
         'name': ' '.join((rider.first_name,rider.last_name)),
         }
     
