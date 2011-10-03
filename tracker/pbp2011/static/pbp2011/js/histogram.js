@@ -1,7 +1,7 @@
 
 /* 
  * General utility functions;
-*/
+ */
 
 /*
  * frameNumToString: 
@@ -200,7 +200,7 @@ function renderFrameNum(frameNum, location, status_flag, plot, tag) {
     frameNum = frameNumToString(frameNum);
 
     // XXX let's load some ride info upfront, don't hardcode this 1230!
-    background = (status_flag||location>= 1230)? 'white' : 'red';
+    background = (status_flag||location>=1230||location==0)? 'white' : 'red';
 
     var offset = plot.pointOffset({x:location, y: frame_y_offset});
     tag.append('<div style="position:absolute; left:' + (offset.left-15) + 'px;top:' + (offset.top) + 'px;font-size:smaller; background:'+background+';border:1px solid black;">'+frameNum+'</div>');
@@ -302,6 +302,8 @@ function main() {
         var dnf_data = [];
         var step=bucketSize;
         var total_riders = 0;
+	var total_finished = 0;
+	var total_dnf = 0;
 
 	/* Start at 1, we don't want to count all the folks at post 0 
 	 * and those at the finish;
@@ -316,9 +318,12 @@ function main() {
             }				     
             total_riders += sum;
             ride_data.push([i, sum]);
-	    if (dnf_sum > 0) 
+	    if (dnf_sum > 0) {
 		dnf_data.push([i, dnf_sum]);
+		total_dnf += dnf_sum;
+	    }
         }
+	total_finished = result.dnf_data[1230]; // XXX there's that hard-coded 1230 again...
 
 	var plot_controls = controls;
 	var plot_refreshment = refreshment;
@@ -364,7 +369,7 @@ function main() {
 	    {
 	     data: dnf_data,
   	     bars: { show: true, barWidth: step},
-	     color: 'red',
+	     color: 'red'
 	    },
             {
              label: "Controls",
@@ -385,7 +390,7 @@ function main() {
             ];
 
         var plot_options = {
-            yaxis: {min: 0, max: 300 },
+            yaxis: {min: 0, max: 400 },
 	    grid: {backgroundColor: getBackgroundColor(date)}
         };
 
@@ -393,6 +398,7 @@ function main() {
 
 	// draw the chart;
         var plot = $.plot(placeholder, plot_data, plot_options);
+
 	// draw any frame tags we may be tracking;
 
 	frame_y_offset = initial_frame_y_offset;
@@ -409,11 +415,36 @@ function main() {
 	    }
 	    renderFrameNum(data.framenum, location, status_flag, plot, placeholder);
 	})
-	$('#date').empty();
-	$('#date').append(histdata_format_date(date));
+
+	// Render the chart descriptive info in the upper-left corner;
+
+	datestr = histdata_format_date(date);
+	var offset = plot.pointOffset({x:20, y:390});
+	var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+datestr+
+	    '<br>'+'Riders:'+total_riders+
+	    '<br>'+'Finished:'+total_finished+
+	    '<br>'+'DNF:'+total_dnf+
+	    '</div>';
+	
+	placeholder.append(html_text);
+
+	// Label any peaks in the data;
+
+	for (var i=0; i<ride_data.length; i++) {
+	    if (ride_data[i][1] > 350) { // XXX should be y-axis max minus some threshold;
+		var offset = plot.pointOffset({x:ride_data[i][0]-5, y:390});
+		var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+ride_data[i][1]+'</div>';
+		placeholder.append(html_text);
+	    }
+	}
+
+	// Add a kilometers label to the bottom;
+	var x_location = fold?270:550;
+	var offset = plot.pointOffset({x:x_location, y:-25});
+	var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+'Kilometers'+'</div>';
+	placeholder.append(html_text);
+
 	refresh_bucketsize();
-	$('#riders').empty();
-	$('#riders').append("Riders:"+total_riders);
     }		
 
     function loadData() {
