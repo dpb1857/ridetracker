@@ -195,12 +195,15 @@ var initial_frame_y_offset = 20;
  *
  * Draw the litle box with the frame number and the pointer on top;
  */
-function renderFrameNum(frameNum, location, plot, tag) {
+function renderFrameNum(frameNum, location, status_flag, plot, tag) {
 
     frameNum = frameNumToString(frameNum);
 
+    // XXX let's load some ride info upfront, don't hardcode this 1230!
+    background = (status_flag||location>= 1230)? 'white' : 'red';
+
     var offset = plot.pointOffset({x:location, y: frame_y_offset});
-    tag.append('<div style="position:absolute; left:' + (offset.left-15) + 'px;top:' + (offset.top) + 'px;font-size:smaller; background:white;border:1px solid black;">'+frameNum+'</div>');
+    tag.append('<div style="position:absolute; left:' + (offset.left-15) + 'px;top:' + (offset.top) + 'px;font-size:smaller; background:'+background+';border:1px solid black;">'+frameNum+'</div>');
     var ctx = plot.getCanvas().getContext("2d");
     ctx.beginPath();
     ctx.moveTo(offset.left, offset.top-10);
@@ -296,6 +299,7 @@ function main() {
 
     function onDataReceived(result) {
         var ride_data = [];
+        var dnf_data = [];
         var step=bucketSize;
         var total_riders = 0;
 
@@ -305,11 +309,15 @@ function main() {
 	// XXX certainly shouldn't hard-code 1230!
 	for (var i=1; (i+step-1)<1230; i+=step) {
             var sum = 0;
+	    var dnf_sum = 0;
             for (var j=0; j<step; j++) {
                 sum += result.data[i+j];
+		dnf_sum += result.dnf_data[i+j];
             }				     
             total_riders += sum;
             ride_data.push([i, sum]);
+	    if (dnf_sum > 0) 
+		dnf_data.push([i, dnf_sum]);
         }
 
 	var plot_controls = controls;
@@ -321,7 +329,8 @@ function main() {
 	    var start = 0;
 	    var end = ride_data.length - 1;
 	    while (end > start) {
-		ride_data[start++][1] += ride_data[end--][1];
+		ride_data[start][1] += ride_data[end][1];
+		start++, end--;
 	    }
 	    var del_start = Math.floor(ride_data.length/2)+1
 	    var del_count = ride_data.length-del_start;
@@ -331,6 +340,20 @@ function main() {
 	    plot_controls = filter_controls(controls, 615);
 	    plot_refreshment = filter_controls(refreshment, 615);
 	    plot_secret = filter_controls(secret, 615);
+
+	    /* Now, fold the DNF data */
+	    var middle = 615; // XXX don't hardcode this magic number!
+	    for (i=0; i<dnf_data.length; i++) {
+		// fold DNF data points that are past the middle;
+		if (dnf_data[i][0] > middle+20) {
+		    dnf_data[i][0] -= (2 * (dnf_data[i][0]-middle)) - 5;
+		}
+	    }
+
+	    /* Center the DNF bars over the control location */
+	    for (i=0; i<dnf_data.length; i++) {
+		dnf_data[i][0] -= (step+1)/2;
+	    }
 	}
 
         var plot_data = [
@@ -338,6 +361,11 @@ function main() {
              data: ride_data,
              lines: { show: true}
              },
+	    {
+	     data: dnf_data,
+  	     bars: { show: true, barWidth: step},
+	     color: 'red',
+	    },
             {
              label: "Controls",
              data: plot_controls,
@@ -371,13 +399,15 @@ function main() {
 
 	var max_distance = controls[controls.length-1][0];
 	$.each(FrameData, function(indx, data) {
-	    var location = data.data[result.time_index]
+	    var location_tup = data.data[result.time_index];
+	    var location = location_tup[0];
+	    var status_flag = location_tup[1];
 	    if (fold) {
 		if (location > max_distance/2) {
 		    location -= 2 * Math.floor((location - max_distance/2));
 		}
 	    }
-            renderFrameNum(data.framenum, location, plot, placeholder);
+	    renderFrameNum(data.framenum, location, status_flag, plot, placeholder);
 	})
 	$('#date').empty();
 	$('#date').append(histdata_format_date(date));

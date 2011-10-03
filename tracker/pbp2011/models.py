@@ -1,3 +1,6 @@
+# disable line length;
+#pylint: disable=C0301
+
 
 from datetime import datetime, timedelta
 
@@ -6,77 +9,21 @@ from django.contrib import admin
 
 from django_countries import CountryField
 
+from tracker.util import RiderTimeDelta
+
 # Create your models here.
 
 RIDE_START_TIME = datetime(2011, 8, 21, 16, 0)
 RIDE_END_TIME = datetime(2011, 8, 25, 18, 0)
 
+############################################################
+# Models correspond to migration 0003
+############################################################
 
-class RiderTimeDelta(object):
-    """
-    Create a class like datetime.timedelta with some special properties.
-    This timedelta has special time markers that represent a
-    Did Not Finish or a Did Not Start, which are interpreted by the
-    template format code in jinja2filters:format_ride_time() to dislay
-    DNS or DNF rather than an actual time.
-    """
-    # XXX don't hardcode the checks in jinja2 filters, check for properties on this class;
-    def __init__(self, start, end, dnf=False, dns=False):
-        if dnf:
-            days, seconds = (100, 0) # Marker for DNF;
-        elif dns:
-            days, seconds = (101, 0) # Marker for DNS;
-        else:
-            try:
-                delta = end - start
-                days, seconds = delta.days, delta.seconds
-            except Exception:
-                days, seconds = (102, 0) # Marker for Unknown;
-
-        self.timedelta = timedelta(days=days, seconds=seconds)
-
-    def __str__(self):
-        
-        return str(self.timedelta)
-
-    def __unicode__(self):
-        
-        return str(self.timedelta)
-
-    def __lt__(self, y):
-        
-        return self.timedelta.__lt__(y.timedelta)
-
-    def __eq__(self, y):
-        
-        return self.timedelta.__eq__(y.timedelta)
-
-    @property
-    def days(self):
-        
-        return self.timedelta.days
-
-    @property
-    def seconds(self):
-
-        return self.timedelta.seconds
-
-
-def constrain_ride_time(time):
-
-    if time < RIDE_START_TIME:
-        time = RIDE_START_TIME
-    elif time > RIDE_END_TIME:
-        time = RIDE_END_TIME
-
-    if time.minute % 15 != 0 or time.second != 0:
-        delta = timedelta(minutes=(time.minute%15), seconds=time.second)
-        time = time - delta
-        
-    return time
-
+# XXX let's get rid of this, make it part of the rider model;
 
 class BikeType(models.Model):
+
     bike_type = models.CharField(max_length=16, unique=True)
 
     def __unicode__(self):
@@ -93,9 +40,15 @@ class Control(models.Model):
         return "%d %s %05.1f" % (self.number, self.name, self.distance)
 
     @staticmethod
-    def get_names():
+    def control_at(distance):
+        
+        if not hasattr(Control, "_control_distances"):
+            ctl_dict = {}
+            for c in Control.objects.all():
+                ctl_dict[int(c.distance)] = c
+            Control._control_distances = ctl_dict
 
-        return [control.name for control in Control.objects.order_by('number')]
+        return Control._control_distances.get(distance, "")
 
     @staticmethod
     def get_controls():
@@ -108,13 +61,8 @@ class Control(models.Model):
         return len(Control.objects.all())
 
 
-class Checkpoint(models.Model):
-    
-    checkpoint_number = models.IntegerField()
-    frame_number = models.IntegerField(db_index=True)
-    time = models.DateTimeField(db_index=True)
-
 class Rider(models.Model):
+
     frame_number = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=32)
@@ -127,73 +75,127 @@ class Rider(models.Model):
     def __unicode__(self):
         return "%d %s %s" % (self.frame_number, self.first_name, self.last_name)
 
+    def __repr__(self):
+       return "Rider(%d, %s %s)" % (self.frame_number, self.first_name, self.last_name)
+
     @property
-    def checkpoint_times(self):
-        checkpoints = Checkpoint.objects.filter(frame_number=self.frame_number)
-        values = Control.get_num_controls() * [None]
-        for cp in checkpoints:
-            values[cp.checkpoint_number-1] = cp.time
-        return values
+    def waypoints(self):
+        """
+        This property is a list of all waypoints for a rider.
+        """
+        if not hasattr(self, "_waypoints"):
+            waypoints = list(Waypoint.objects.filter(frame_key=self.frame_number).order_by('timestamp'))
+            if waypoints:
+                new_waypoints = [waypoints[0]]
+                waypoints = waypoints[1:]
+                while waypoints:
+                    prev_waypoint = new_waypoints[-1]
+                    next_waypoint = waypoints[0]
+                    if next_waypoint.transition == Waypoint.TRANSITION_ARRIVAL:
+                        # Generate a fake departure waypoint;
+                        syn_waypoint = Waypoint()
+                        syn_waypoint.frame_key = prev_waypoint.frame_key
+                        syn_waypoint.kilometers = prev_waypoint.kilometers
+                        syn_waypoint.transition = Waypoint.TRANSITION_DEPARTURE
+                        syn_waypoint.timestamp = prev_waypoint.timestamp + timedelta(hours=1)
+                        syn_waypoint.data_source = Waypoint.SOURCE_SYNTHETIC
+                        new_waypoints.append(syn_waypoint)
+
+                    new_waypoints.append(next_waypoint)
+                    waypoints = waypoints[1:]
+
+                waypoints = new_waypoints
+
+            self._waypoints = waypoints
+
+        return self._waypoints
 
     @property
     def elapsed(self):
-        times = self.checkpoint_times
-        return RiderTimeDelta(times[0], times[14], dns=self.dns, dnf=self.dnf)
+        """
+        Take the delta-t between the last and first controls.
+        """
+	if not self.dns:
+	    waypoints = self.waypoints
 
-    # XXX would it make more sense for this just be a property on a Rider object rather than a staticmethod?
+	if self.dns or not waypoints:
+	    return RiderTimeDelta(None, None, dns=self.dns, dnf=self.dnf)
+        else:
+	    return RiderTimeDelta(waypoints[0].timestamp, waypoints[-1].timestamp, dns=self.dns, dnf=self.dnf)
 
-    @staticmethod
-    def get_locations(frame_num):
+    def get_locations(self, start_time, end_time, step=timedelta(minutes=15)):
         """
         Return a list containing the rider position at each timeslice during
-        the ride.
+        the ride. The value is an integer to represent a location or None for DNS riders.
+        If the value is a negative integer, that means that the location is the final
+        resting place of that rider.
         """
-        controls = Control.get_controls()
-        control_times = [None] * len(controls)
-        for checkpoint in Checkpoint.objects.filter(frame_number=frame_num):
-            control_times[checkpoint.checkpoint_number-1] = checkpoint.time
-
-        while control_times and control_times[-1] is None:
-            del control_times[-1]
-
         locations = []
-        current_time = RIDE_START_TIME
-        while current_time <= RIDE_END_TIME:
-            locations.append(int(Rider.get_location(current_time, controls, control_times)))
-            current_time += timedelta(minutes=15)
+        current_time = start_time
+
+        while current_time <= end_time:
+            location = self.get_location(current_time)
+            locations.append(location)
+            current_time += step
 
         return locations
 
-    @staticmethod
-    def get_location(when, controls, times):
-        """
-        Return the rider location at WHEN.
-        controls is a list of control objects,
-        times is the list of checkpoint times for the rider.
-        """
-        # Start control only - no data for positioning;
-        if len(times) == 1:
-            return controls[-1].distance
+    def get_location(self, when):
+	"""
+        Return the rider location at time WHEN as a tuple of (distance, continuing_flag).
+        If WHEN is past the final time for a rider, continuing_flag is False.
+        Return 'None' if there are no waypoints for this rider.
+	"""
 
-        # Rider hasn't started yet;
-        if when <= times[0]:
-            return controls[0].distance
+	waypoints = self.waypoints
+	if not waypoints:
+	    return None
+	
+	# Rider hasn't started yet;
+	if when <= waypoints[0].timestamp:
+	    return (waypoints[0].kilometers, True)
+	
+	# Past the final time for this rider;
+	if when >= waypoints[-1].timestamp:
+	    return (waypoints[-1].kilometers, False)
 
-        # Past the final time for this rider;
-        if when >= times[-1]:
-            return controls[-1].distance
+	min = 0
+	max = len(waypoints) - 1
+	while min+1 < max:
+	    median = (min+max)/2
+	    if when < waypoints[median].timestamp:
+		max = median
+	    else:
+		min = median
 
-        min = 0
-        max = len(times) -1
-        while min+1 < max:
-            median = (min+max)/2
-            if when < times[median]:
-                max = median
-            else:
-                min = median
+        # Rider is still at a checkpoint
+	if waypoints[min].kilometers == waypoints[max].kilometers:
+	    return (waypoints[min].kilometers, True)
 
-        # ASSERT: times[min] <= when < times[max]
+        ride_time = when - waypoints[min].timestamp
+        time_between_waypoints = waypoints[max].timestamp - waypoints[min].timestamp
+        distance_between_waypoints = waypoints[max].kilometers - waypoints[min].kilometers
 
-        speed = (controls[max].distance-controls[min].distance)/(times[max]-times[min]).total_seconds()
-        extra_distance = speed * (when - times[min]).total_seconds()
-        return controls[min].distance + extra_distance
+        # Additional distance is  ride_time/time_between_breaks * distance_between_breaks
+        extra_distance = (ride_time.total_seconds()/time_between_waypoints.total_seconds()) * distance_between_waypoints
+
+        return (waypoints[min].kilometers + extra_distance, True)
+
+
+class Waypoint(models.Model):
+
+    TRANSITION_ARRIVAL = 1
+    TRANSITION_DEPARTURE = 2
+
+    SOURCE_SYSTEM = 1
+    SOURCE_USER = 2
+    SOURCE_SYNTHETIC = 3
+
+    frame_key = models.ForeignKey(Rider)
+    kilometers = models.FloatField()
+    transition = models.IntegerField()  # 1 == arrival, 2 == departure;
+    timestamp = models.DateTimeField()
+    data_source = models.IntegerField()  # 1 == from system, 2 == user data;
+
+    def __repr__(self):
+        return "Waypoint(%d, %.1f, %s, %s, %d)" % (self.frame_key_id, self.kilometers, str(self.arrival), str(self.departure), self.data_source)
