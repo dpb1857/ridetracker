@@ -91,7 +91,7 @@ function AddTrackedFrame(frame_num) {
     // If the frame is not already in our list, add it;
     if (i == TrackFrames.length) {
 	TrackFrames[TrackFrames.length] = frame_num;
-	$.cookie(TrackFrames_cookie, TrackFrames);
+	$.cookie(TrackFrames_cookie, TrackFrames, { expires: 7, path: '/' });
 	BuildTrackList();
     }
 }
@@ -101,7 +101,7 @@ function RemoveTrackedFrame(frame_num) {
     for (var i=0; i<TrackFrames.length; i++) {
 	if (TrackFrames[i] == frame_num) {
 	    TrackFrames.splice(i, 1);
-	    $.cookie(TrackFrames_cookie, TrackFrames);
+	    $.cookie(TrackFrames_cookie, TrackFrames, { expires: 7, path: '/' });
 	    RemoveTrackedFrameData(frame_num);
 	    BuildTrackList();
 	    break;
@@ -162,7 +162,7 @@ function BuildTrackList() {
 
     // Generate a button based on the frame number;
     function generate_button(frame_num) {
-	return '<input type="image" src="/static/misc/images/delete.png" width="20px" name="' + frame_num + '">'
+	return '<input type="image" src="/static/misc/images/delete.png" width="15px" name="' + frame_num + '">'
     }
 
     // Build the tracking list - button, frame number, rider name;
@@ -195,12 +195,11 @@ var initial_frame_y_offset = 20;
  *
  * Draw the litle box with the frame number and the pointer on top;
  */
-function renderFrameNum(frameNum, location, status_flag, plot, tag) {
+function renderFrameNum(frameNum, location, status_flag, plot, tag, final_distance) {
 
     frameNum = frameNumToString(frameNum);
 
-    // XXX let's load some ride info upfront, don't hardcode this 1230!
-    background = (status_flag||location>=1230||location==0)? 'white' : 'red';
+    background = (status_flag||location>=final_distance||location==0)? 'white' : 'red';
 
     var offset = plot.pointOffset({x:location, y: frame_y_offset});
     tag.append('<div style="position:absolute; left:' + (offset.left-15) + 'px;top:' + (offset.top) + 'px;font-size:smaller; background:'+background+';border:1px solid black;">'+frameNum+'</div>');
@@ -217,17 +216,17 @@ function renderFrameNum(frameNum, location, status_flag, plot, tag) {
 
 function main() {
 
-    var start_date = new Date(2011, 8, 21, 16, 0); // XXX get from server;
-    var end_date =  new Date(2011, 8, 25, 18, 0); // XXX get from server;
+    var fullData;
+
 
     var paused = true;
-    var date = start_date;
     var bucketSize = 5;
     var fold = false;
 
     // XXX get from server;
-    var controls = [[0, 0], [221, 0], [310, 0], [364, 0], [449, 0], [525, 0], [618, 0], [703, 0], [782, 0], [867, 0], [921, 0], [1009, 0], [1090, 0], [1165, 0], [1230, 0]
-                    ];
+    var start_date = new Date(2011, 8, 21, 16, 0); 
+    // XXX get from server;
+    var controls = [[0, 0], [221, 0], [310, 0], [364, 0], [449, 0], [525, 0], [618, 0], [703, 0], [782, 0], [867, 0], [921, 0], [1009, 0], [1090, 0], [1165, 0], [1230, 0]];
     // XXX get from server;
     var refreshment = [[140, 0], [493, 0], [736, 0]];
     // XXX get from server;
@@ -248,15 +247,13 @@ function main() {
         paused = false;
         $("input#stop").show();
         $("input#start").hide();
-        loadDataViaTimer();
+        animate();
     })
 
     $("input#reset").click(function() {
-        paused = true;
-        date = start_date;
+	reset_animation();
         $("input#stop").hide();
-        $("input#start").show();
-	loadData();
+        $("input#start").show().attr("disabled", "");
     })
 
     $("input#bucket_plus").click(function() {
@@ -276,11 +273,21 @@ function main() {
     })
     $("input#fold").attr("checked", false)
 
-    $("input#track").click(function() {
+    function process_track_frame() {
 	var framenum = parseInt($("input#framenum").val());
 	$("input#framenum").val("");
 	if (!isNaN(framenum) && !IsFrameTracked(framenum)) {
 	    loadFrameData(framenum);
+	}
+    }
+
+    $("input#track").click(function() {
+	process_track_frame();
+    })
+
+    $("#track_entry").keypress(function(e) {
+	if (e.which == 13) {
+	    process_track_frame();
 	}
     })
 
@@ -289,7 +296,7 @@ function main() {
 	var filtered = [];
 
 	for (var i=0; i<controls.length; i++) {
-	    if (controls[i][0] < 615) {
+	    if (controls[i][0] < cutoff) {
 		filtered[filtered.length] = controls[i];
 	    }
 	}
@@ -297,9 +304,9 @@ function main() {
 	return filtered;
     }
 
-    function onDataReceived(result) {
-        var ride_data = [];
-        var dnf_data = [];
+    function plotHistogram(rider_data, dnf_data, time_index) {
+        var ride_bins = [];
+        var dnf_bins = [];
         var step=bucketSize;
         var total_riders = 0;
 	var total_finished = 0;
@@ -308,22 +315,27 @@ function main() {
 	/* Start at 1, we don't want to count all the folks at post 0 
 	 * and those at the finish;
 	 */
-	// XXX certainly shouldn't hard-code 1230!
-	for (var i=1; (i+step-1)<1230; i+=step) {
+
+	var max_x = controls[controls.length-1][0]; // Distance of the last control;
+	var final_distance = rider_data.length - 1; // Final distance for which we have rider data;
+        var date = new Date(start_date.getTime() + time_index*15*60*1000);
+
+	for (var i=1; (i+step-1)<final_distance; i+=step) {
             var sum = 0;
 	    var dnf_sum = 0;
             for (var j=0; j<step; j++) {
-                sum += result.data[i+j];
-		dnf_sum += result.dnf_data[i+j];
+                sum += rider_data[i+j];
+		dnf_sum += dnf_data[i+j];
             }				     
             total_riders += sum;
-            ride_data.push([i, sum]);
+            ride_bins.push([i, sum]);
 	    if (dnf_sum > 0) {
-		dnf_data.push([i, dnf_sum]);
+		dnf_bins.push([i, dnf_sum]);
 		total_dnf += dnf_sum;
 	    }
         }
-	total_finished = result.dnf_data[1230]; // XXX there's that hard-coded 1230 again...
+	if (final_distance > 0)
+	    total_finished = dnf_data[final_distance];
 
 	var plot_controls = controls;
 	var plot_refreshment = refreshment;
@@ -332,42 +344,42 @@ function main() {
 	if (fold) {
 	    /* Fold the plot data */
 	    var start = 0;
-	    var end = ride_data.length - 1;
+	    var end = ride_bins.length - 1;
 	    while (end > start) {
-		ride_data[start][1] += ride_data[end][1];
+		ride_bins[start][1] += ride_bins[end][1];
 		start++, end--;
 	    }
-	    var del_start = Math.floor(ride_data.length/2)+1
-	    var del_count = ride_data.length-del_start;
-	    ride_data.splice(del_start, del_count);
+	    var del_start = Math.floor(ride_bins.length/2)+1
+	    var del_count = ride_bins.length-del_start;
+	    ride_bins.splice(del_start, del_count);
 
 	    /* Next, remove controls past the fold */
-	    plot_controls = filter_controls(controls, 615);
-	    plot_refreshment = filter_controls(refreshment, 615);
-	    plot_secret = filter_controls(secret, 615);
+	    plot_controls = filter_controls(controls, final_distance/2);
+	    plot_refreshment = filter_controls(refreshment, final_distance/2);
+	    plot_secret = filter_controls(secret, final_distance/2);
 
 	    /* Now, fold the DNF data */
-	    var middle = 615; // XXX don't hardcode this magic number!
-	    for (i=0; i<dnf_data.length; i++) {
+	    var middle = final_distance/2;
+	    for (i=0; i<dnf_bins.length; i++) {
 		// fold DNF data points that are past the middle;
-		if (dnf_data[i][0] > middle+20) {
-		    dnf_data[i][0] -= (2 * (dnf_data[i][0]-middle)) - 5;
+		if (dnf_bins[i][0] > middle+20) {
+		    dnf_bins[i][0] -= (2 * (dnf_bins[i][0]-middle)) - 5;
 		}
 	    }
 
 	    /* Center the DNF bars over the control location */
-	    for (i=0; i<dnf_data.length; i++) {
-		dnf_data[i][0] -= (step+1)/2;
+	    for (i=0; i<dnf_bins.length; i++) {
+		dnf_bins[i][0] -= (step+1)/2;
 	    }
 	}
 
         var plot_data = [
             {
-             data: ride_data,
+             data: ride_bins,
              lines: { show: true}
              },
 	    {
-	     data: dnf_data,
+	     data: dnf_bins,
   	     bars: { show: true, barWidth: step},
 	     color: 'red'
 	    },
@@ -389,8 +401,10 @@ function main() {
              }
             ];
 
+	var max_y = 400;
+
         var plot_options = {
-            yaxis: {min: 0, max: 400 },
+            yaxis: {min: 0, max: max_y },
 	    grid: {backgroundColor: getBackgroundColor(date)}
         };
 
@@ -405,7 +419,7 @@ function main() {
 
 	var max_distance = controls[controls.length-1][0];
 	$.each(FrameData, function(indx, data) {
-	    var location_tup = data.data[result.time_index];
+	    var location_tup = data.data[time_index];
 	    var location = location_tup[0];
 	    var status_flag = location_tup[1];
 	    if (fold) {
@@ -413,13 +427,13 @@ function main() {
 		    location -= 2 * Math.floor((location - max_distance/2));
 		}
 	    }
-	    renderFrameNum(data.framenum, location, status_flag, plot, placeholder);
+	    renderFrameNum(data.framenum, location, status_flag, plot, placeholder, final_distance);
 	})
 
 	// Render the chart descriptive info in the upper-left corner;
 
 	datestr = histdata_format_date(date);
-	var offset = plot.pointOffset({x:20, y:390});
+	var offset = plot.pointOffset({x:20, y:max_y-10});
 	var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+datestr+
 	    '<br>'+'Riders:'+total_riders+
 	    '<br>'+'Finished:'+total_finished+
@@ -430,45 +444,68 @@ function main() {
 
 	// Label any peaks in the data;
 
-	for (var i=0; i<ride_data.length; i++) {
-	    if (ride_data[i][1] > 350) { // XXX should be y-axis max minus some threshold;
-		var offset = plot.pointOffset({x:ride_data[i][0]-5, y:390});
-		var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+ride_data[i][1]+'</div>';
+	for (var i=0; i<ride_bins.length; i++) {
+	    if (ride_bins[i][1] > max_y-30) {
+		var offset = plot.pointOffset({x:ride_bins[i][0]-5, y:max_y-10});
+		var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+ride_bins[i][1]+'</div>';
 		placeholder.append(html_text);
 	    }
 	}
 
 	// Add a kilometers label to the bottom;
-	var x_location = fold?270:550;
-	var offset = plot.pointOffset({x:x_location, y:-25});
-	var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+'Kilometers'+'</div>';
-	placeholder.append(html_text);
-
+	if (max_x > 0) {
+	    var x_location = fold?(max_x/4-35):(max_x/2-80);
+	    var offset = plot.pointOffset({x:x_location, y:-25});
+	    var html_text = '<div style="position:absolute; left:' + offset.left + 'px; top:' + offset.top + 'px; font-size:smaller;">'+'Kilometers'+'</div>';
+	    placeholder.append(html_text);
+	}
 	refresh_bucketsize();
     }		
 
+    function onFullDataReceived(data) {
+	fullData = data
+        $("input#start").attr("disabled", "");
+	plotHistogram(data[0][0], data[0][1], data[0][2]);
+    }
+
     function loadData() {
-        var datestr = histdata_format_date(date);
 	$.ajax({
-	    url: "/histogram/histdata/"+datestr,
+	    url: "/histogram/histdata/full",
 	    method: 'GET',
 	    dataType: 'json',
-	    success: onDataReceived
+	    success: onFullDataReceived
 	});
     };
 
-    function loadDataViaTimer() {
+    /*
+     * Animation control
+     */
+
+    var animate_index = 0;
+
+    function animate() {
         if (paused)
             return;
 
-        loadData();
-        var next_date = new Date(date.getTime() + 15*60*1000); // Increment date by 15min
-        if (next_date < end_date) {
-            date = next_date;
-            setTimeout(loadDataViaTimer, 200);
-        }
+	var indx = animate_index;
+	if (animate_index < fullData.length) {
+	    plotHistogram(fullData[indx][0], fullData[indx][1], fullData[indx][2]);
+	    animate_index += 1;
+            setTimeout(animate, 200);
+        } else {
+            $("input#stop").hide();
+            $("input#start").show().attr("disabled", "disabled");
+	}
     }
 
+    function reset_animation() {
+	paused = true;
+	animate_index = 0;
+	plotHistogram(fullData[0][0], fullData[0][1], fullData[0][2]);
+    }
+
+    plotHistogram([], [], 0);
     LoadTrackedFrames();
     loadData();
+    $("input#start").attr("disabled", "disabled");
 };

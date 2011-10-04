@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.utils import simplejson
 from django.views.decorators.cache import cache_page
+from django.views.decorators.gzip import gzip_page
 
 import models
 import pbp2011.models as ridemodels
@@ -26,6 +27,7 @@ def compute_histogram(request):
     models.compute_pbp2011_histogram()
     return HttpResponse("Done.")
 
+@gzip_page
 @cache_page(60*60)
 def hist_data(request, datespec):
     """
@@ -52,6 +54,27 @@ def hist_data(request, datespec):
 
     return HttpResponse(simplejson.dumps(result), mimetype="application/json")
 
+# XXX needs test
+@gzip_page
+@cache_page(60*60)
+def full_hist_data(request):
+    """
+    """
+
+    data = []
+    now = ridemodels.RIDE_START_TIME
+    end = ridemodels.RIDE_END_TIME
+    time_index = 0
+
+    while now <= end:
+        locations, dnfs = models.Location.get_histogram_data(now)
+        data.append((locations, dnfs, time_index))
+        time_index += 1
+        now += timedelta(minutes=15)
+
+    return HttpResponse(simplejson.dumps(data), mimetype="application/json")
+
+@gzip_page
 @cache_page(60*60)
 def frame_data(request, frame_num):
 
