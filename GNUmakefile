@@ -4,8 +4,8 @@
 default: help
 
 python:
-	django_bootstrap.py . --infrastructure-only
-	python/bin/pip install django_countries
+	./util/django_bootstrap.py . --infrastructure-only
+	python/bin/pip install django_countries==1.0.5
 
 prod_fixperms:
 	sudo chown -R www-data:www-data data
